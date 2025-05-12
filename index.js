@@ -98,9 +98,10 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   let text = null;
 
   if (!oldState.channel && newState.channel) {
-    text = `${newState.member.displayName}が侵入しよった。`;
+    text = `${newState.member.user.userName}が侵入しよった。`;
   } else if (oldState.channel && !newState.channel) {
-    text = `${oldState.member.displayName}が消滅した。`;
+    text = `${oldState.member.user.userName
+}が消滅した。`;
   }
 
   if (text) {
