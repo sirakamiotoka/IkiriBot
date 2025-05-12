@@ -25,6 +25,19 @@ client.once(Events.ClientReady, c => {
 client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
   
+  if (message.content === '/sy.dc') {
+    const connection = joinVoiceChannel({
+      channelId: message.member.voice.channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+    });
+    
+    connection.destroy();
+    activeChannel = null;
+    message.reply('ボイスチャンネルから切断しました。');
+    return;
+  }
+
   if (message.content === '/sy.join') {
     if (!message.member.voice.channel) {
       message.reply('ボイスチャンネルに接続してから実行してください。');
