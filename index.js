@@ -5,11 +5,11 @@ const { spawn } = require('child_process');
 const { createWriteStream } = require('fs');
 
 const client = new Client({ 
-  intents: [GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.GuildVoiceStates,
-      GatewayIntentBits.MessageContent,
-      GatewayIntentBits.GuildMembers,
-      GatewayIntentBits.GuildPresencesPresences
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent
   ] 
 });
 
@@ -20,7 +20,22 @@ client.once(Events.ClientReady, c => {
 client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
   
-  // ボイスチャンネルに接続していない場合は無視
+  if (message.content === '/sy.join') {
+    if (!message.member.voice.channel) {
+      message.reply('ボイスチャンネルに接続してから実行してください。');
+      return;
+    }
+    
+    const connection = joinVoiceChannel({
+      channelId: message.member.voice.channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+    });
+    
+    message.reply('ボイスチャンネルに接続しました。');
+    return;
+  }
+  
   if (!message.member.voice.channel) return;
 
   // 音声を生成
