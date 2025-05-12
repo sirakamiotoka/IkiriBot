@@ -1,8 +1,9 @@
 
 const { Client, Events, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, getVoiceConnection } = require('@discordjs/voice');
-const { spawn } = require('child_process');
-const { createWriteStream } = require('fs');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const textToSpeech = require('@google-cloud/text-to-speech');
+const util = require('util');
+const fs = require('fs');
 
 const client = new Client({ 
   intents: [
@@ -12,6 +13,10 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ] 
 });
+
+const ttsClient = new textToSpeech.TextToSpeechClient();
+
+let activeChannel = null;
 
 client.once(Events.ClientReady, c => {
   console.log(`Ready! (${c.user.tag})`);
@@ -32,41 +37,37 @@ client.on(Events.MessageCreate, async message => {
       adapterCreator: message.guild.voiceAdapterCreator,
     });
     
-    message.reply('ボイスチャンネルに接続しました。');
+    activeChannel = message.channel.id;
+    message.reply('ボイスチャンネルに接続しました。このチャンネルのメッセージを読み上げます。');
     return;
   }
   
-  if (!message.member.voice.channel) return;
+  if (!message.member.voice.channel || message.channel.id !== activeChannel) return;
 
-  // 音声を生成
-  const text = message.content;
-  const audioPlayer = createAudioPlayer();
-  
-  // Open JTalkを使用して音声合成
-  const openjtalk = spawn('open_jtalk', [
-    '-x', '/usr/local/dic',
-    '-m', '/usr/share/hts-voice/mei/mei_normal.htsvoice',
-    '-ow', 'output.wav'
-  ]);
+  try {
+    const request = {
+      input: { text: message.content },
+      voice: { languageCode: 'ja-JP', name: 'ja-JP-Neural2-B' },
+      audioConfig: { audioEncoding: 'MP3' },
+    };
 
-  openjtalk.stdin.write(text);
-  openjtalk.stdin.end();
-
-  openjtalk.on('close', () => {
-    // ボイスチャンネルに接続
+    const [response] = await ttsClient.synthesizeSpeech(request);
+    await util.promisify(fs.writeFile)('output.mp3', response.audioContent, 'binary');
+    
     const connection = joinVoiceChannel({
       channelId: message.member.voice.channel.id,
       guildId: message.guild.id,
       adapterCreator: message.guild.voiceAdapterCreator,
     });
 
-    // 音声を再生
-    const resource = createAudioResource('output.wav');
-    connection.subscribe(audioPlayer);
-    audioPlayer.play(resource);
-  });
+    const player = createAudioPlayer();
+    const resource = createAudioResource('output.mp3');
+    connection.subscribe(player);
+    player.play(resource);
+  } catch (error) {
+    console.error('Error:', error);
+    message.reply('音声の生成中にエラーが発生しました。');
+  }
 });
-
-require('http').createServer((req, res) => res.end('')).listen(3000);
 
 client.login(process.env.BOT_TOKEN);
