@@ -16,6 +16,7 @@
     "@types/node": "^18.0.6",
     "discord.js": "^14.8.0",
     "ffmpeg-static": "^5.2.0",
+    "gtts": "^0.2.1",
     "libsodium-wrappers": "^0.7.15",
     "node-fetch": "^3.2.6"
   }

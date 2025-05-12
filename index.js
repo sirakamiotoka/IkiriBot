@@ -1,8 +1,7 @@
 
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
-const textToSpeech = require('@google-cloud/text-to-speech');
-const util = require('util');
+const gTTS = require('gtts');
 const fs = require('fs');
 
 const client = new Client({ 
@@ -60,14 +59,13 @@ client.on(Events.MessageCreate, async message => {
   if (!message.member.voice.channel || message.channel.id !== activeChannel) return;
 
   try {
-    const request = {
-      input: { text: message.content },
-      voice: { languageCode: 'ja-JP', name: 'ja-JP-Neural2-B' },
-      audioConfig: { audioEncoding: 'MP3' },
-    };
-
-    const [response] = await ttsClient.synthesizeSpeech(request);
-    await util.promisify(fs.writeFile)('output.mp3', response.audioContent, 'binary');
+    const gtts = new gTTS(message.content, 'ja');
+    await new Promise((resolve, reject) => {
+      gtts.save('output.mp3', (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
     
     const connection = joinVoiceChannel({
       channelId: message.member.voice.channel.id,
