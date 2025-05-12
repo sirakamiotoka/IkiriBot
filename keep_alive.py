@@ -1,11 +1,12 @@
-from flask import Flask
+from flask import Flask, request
 from threading import Thread
-from keep_alive import keep_alive
+
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "I'm alive"
+    url = request.base_url
+    return f'このページのURLは {url} です'
 
 def run():
     app.run(host='0.0.0.0', port=8080)
