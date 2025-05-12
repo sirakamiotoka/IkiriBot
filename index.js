@@ -20,7 +20,9 @@ client.once(Events.ClientReady, c => {
 client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
   
-  if (message.content === '/sy.join') {
+  let activeChannel = null;
+
+if (message.content === '/sy.join') {
     if (!message.member.voice.channel) {
       message.reply('ボイスチャンネルに接続してから実行してください。');
       return;
@@ -32,11 +34,12 @@ client.on(Events.MessageCreate, async message => {
       adapterCreator: message.guild.voiceAdapterCreator,
     });
     
-    message.reply('ボイスチャンネルに接続しました。');
+    activeChannel = message.channel.id;
+    message.reply('ボイスチャンネルに接続しました。このチャンネルのメッセージを読み上げます。');
     return;
   }
   
-  if (!message.member.voice.channel) return;
+  if (!message.member.voice.channel || message.channel.id !== activeChannel) return;
 
   // 音声を生成
   const text = message.content;
