@@ -14,7 +14,9 @@ const client = new Client({
   ] 
 });
 
-const ttsClient = new textToSpeech.TextToSpeechClient();
+const ttsClient = new textToSpeech.TextToSpeechClient({
+  credentials: JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+});
 
 let activeChannel = null;
 
