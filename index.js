@@ -113,6 +113,8 @@ clientDiscord.on(Events.MessageCreate, async message => {
   if (message.content.startsWith('/ik.setcommand')) {
     // コマンドが送られたサーバーIDを取得
     const guildId = message.guild.id; // メッセージが送信されたサーバーのID
+    // Bot自身のクライアントIDを取得
+    const clientId = clientDiscord.user.id; // BotのユーザーID（clientId）
 
     // guildIdを使って何か処理を行う（ここではコンソールに出力）
     console.log(`Command received in guild: ${guildId}`);
@@ -127,10 +129,10 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 // コマンドをDiscordに登録する処理
 (async () => {
   try {
-    console.log('Started refreshing application (/) commands.');
+    console.log('コマンド辞書登録');
 
     // コマンドをDiscordサーバーに登録
-    await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), {
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: commands,
     });
 
