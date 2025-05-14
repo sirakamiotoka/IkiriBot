@@ -108,20 +108,22 @@ clientDiscord.on(Events.MessageCreate, async message => {
 
   const content = message.content;
   let guildId = null;
-  const clientId = null;
+  
+  // Bot自身のクライアントIDを取得
+  const clientId = "1160889969313841152";
   
   // === コマンド処理（/ik.setcommand） ===
   if (content.startsWith('/ik.setcommand')) {
     // コマンドが送られたサーバーIDを取得
     let guildId = message.guild.id; // メッセージが送信されたサーバーのID
-    // Bot自身のクライアントIDを取得
-    clientId = "1160889969313841152";
+    
+    
 
     // guildIdを使って何か処理を行う（ここではコンソールに出力）
     console.log(`Command received in guild: ${guildId}`);
     
     // 返答メッセージを送信
-    message.reply(`このコマンドはサーバーID ${guildId} で実行されました！`);
+    message.reply(`${guildId} に追加してやったぞ。有難く思えｗ`);
     return;
   }
 // RESTクライアントを作成
