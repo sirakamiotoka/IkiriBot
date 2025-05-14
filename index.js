@@ -101,7 +101,7 @@ client.on(Events.MessageCreate, async message => {
   }
 
   if (content === '/ik.join') {
-    if (voiceConnection && voiceConnection.state.status !== 'destroyed') {
+    if (voiceConnection) {
     message.reply('もう入ってるやんｗ目ぇついてますか？ｗｗｗ');
     return;
   }
