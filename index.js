@@ -110,7 +110,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   
   // RESTクライアントを作成
 　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  if (content === '/ik.commandset') {
+  if (content === '/ik_commandset') {
   let guildId = message.guild.id; // メッセージが送信されたサーバーのID
   const clientId = clientDiscord.user.id; // Bot自身のclientIdを動的に取得
 
@@ -135,8 +135,43 @@ try {
 }
 
 
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isCommand()) return;
 
+  const { commandName } = interaction;
 // === コマンド処理（VC接続/切断/ヘルプ） ===
+  
+  if (commandName === 'ik_kill') {
+    if (voiceConnection) {
+      voiceConnection.destroy();
+      activeChannel = null;
+      message.reply('は？何してくれてんの？');
+    } else {
+      message.reply('どこにも繋いでないねwざんねん！w');
+    }
+    return;
+  }
+
+  if (commandName === 'ik_join') {
+    if (!message.member.voice.channel) {
+      message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
+      return;
+    }
+    voiceConnection = joinVoiceChannel({
+      channelId: message.member.voice.channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+    });
+    activeChannel = message.channel.id;
+    message.reply('入った。だる。');
+    return;
+  }
+
+  if (commandName === 'ik_help') {
+    message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
+    return;
+  }
+  //メッセージで受け取った場合
   if (content === '/ik_kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
@@ -168,6 +203,8 @@ try {
     return;
   }
 
+
+  //辞書には関係なしコマンド
   if (content === '/ik_w') {
     message.reply('何わろとんねん死んでくれ');
     return;
