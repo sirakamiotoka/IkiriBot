@@ -88,6 +88,12 @@ clientDiscord.on(Events.MessageCreate, async message => {
   const content = message.content;
 
   if (content === '!ik.kill') {
+
+    voiceConnection = joinVoiceChannel({
+      channelId: message.member.voice.channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+    });
     if (voiceConnection) {
       voiceConnection.destroy();
       //voiceConnection = null;
