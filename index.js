@@ -178,6 +178,8 @@ clientDiscord.on('interactionCreate', async interaction => {
   if (content === '!ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
+
+      voiceConnection = null;
       activeChannel = null;
       message.reply('は？何してくれてんの？');
     } else {
