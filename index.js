@@ -25,6 +25,16 @@ const audioQueue = []; // 読み上げキュー
 let isPlaying = false;
 const globalSpeed = 1.2; // 固定速度
 
+// コマンド辞書
+const commandDictionary = [
+  '/ik.kill',
+  '/ik.join',
+  '/ik.help',
+  '/ik.w',
+  '/ik.konamon',
+  '/ik.tntn'
+];
+
 function sanitizeText(text) {
   return text
     .replace(/<a?:\w+:\d+>/g, '') // カスタム絵文字
@@ -34,6 +44,15 @@ function sanitizeText(text) {
 
 function shortenText(text, limit = 50) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
+}
+
+// ユーザーが入力したコマンドに基づいて候補を表示
+function showCommandSuggestions(message, input) {
+  const suggestions = commandDictionary.filter(cmd => cmd.startsWith(input));
+  if (suggestions.length > 0) {
+    const replyText = `以下のコマンドが見つかりました:\n${suggestions.join('\n')}`;
+    message.reply(replyText);
+  }
 }
 
 // Google Cloud Text-to-Speech APIで音声合成
@@ -88,6 +107,12 @@ clientDiscord.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
+
+  // コマンド途中入力のチェック
+  if (content.startsWith('/ik.')) {
+    showCommandSuggestions(message, content); // コマンド候補を表示
+    return;
+  }
 
   // === コマンド処理（VC接続/切断/ヘルプ） ===
   if (content === '/ik.kill') {
