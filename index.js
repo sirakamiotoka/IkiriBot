@@ -175,6 +175,10 @@ clientDiscord.on('interactionCreate', async interaction => {
 });
 */
   //メッセージで受け取った場合
+  client.on(Events.MessageCreate, async message => {
+  if (message.author.bot) return;
+  const content = message.content;
+    
   if (content === '!ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
