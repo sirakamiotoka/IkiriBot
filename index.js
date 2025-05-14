@@ -16,7 +16,6 @@ let activeChannel = null;
 let voiceConnection = null;
 
 client.once(Events.ClientReady, c => {
-  console.log(`Server is running at: https://your-app-name.up.railway.app:${port}`);
   console.log(`(${c.user.tag}) が起動しました！`);
 });
 
@@ -134,5 +133,8 @@ app.get('/', (req, res) => {
 
 app.listen(3000, () => {
   console.log('Web server is running on port 3000');
+});
+app.listen(port, () => {
+  console.log(`Server is running at: https://your-app-name.up.railway.app:${port}`);
 });
 
