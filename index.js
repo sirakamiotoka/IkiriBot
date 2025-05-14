@@ -111,7 +111,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
     });
 
     try {
-  await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5_000);
+  await entersState(VoiceConnectionStatus.Ready, 5_000);
   message.reply('Voice connection is ready!');
 } catch (error) {
   message.reply('VC接続ができねえやんけ');
