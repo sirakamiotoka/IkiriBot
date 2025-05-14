@@ -23,15 +23,15 @@ const clientDiscord = new Client({
 // コマンド定義
 const commands = [
   {
-    name: 'ik.join',
+    name: 'ik_join',
     description: '何がなんでもVCに凸ります',
   },
   {
-    name: 'ik.kill',
+    name: 'ik_kill',
     description: 'いきってるBOTを抹消します',
   },
   {
-    name: 'ik.help',
+    name: 'ik_help',
     description: '助けを乞います',
   }
 ];
@@ -137,7 +137,7 @@ try {
 
 
 // === コマンド処理（VC接続/切断/ヘルプ） ===
-  if (content === '/ik.kill') {
+  if (content === '/ik_kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
       activeChannel = null;
@@ -148,7 +148,7 @@ try {
     return;
   }
 
-  if (content === '/ik.join') {
+  if (content === '/ik_join') {
     if (!message.member.voice.channel) {
       message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
@@ -163,22 +163,22 @@ try {
     return;
   }
 
-  if (content === '/ik.help') {
+  if (content === '/ik_help') {
     message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
-  if (content === '/ik.w') {
+  if (content === '/ik_w') {
     message.reply('何わろとんねん死んでくれ');
     return;
   }
 
-  if (content === '/ik.konamon') {
+  if (content === '/ik_konamon') {
     message.reply('ちんちん交通整備魂');
     return;
   }
 
-  if (content === '/ik.tntn') {
+  if (content === '/ik_tntn') {
     message.reply('こなもんのヤり抜くっ!!');
     return;
   }
