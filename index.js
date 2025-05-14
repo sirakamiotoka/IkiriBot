@@ -30,9 +30,6 @@ const commandDictionary = [
   '/ik.kill',
   '/ik.join',
   '/ik.help',
-  '/ik.w',
-  '/ik.konamon',
-  '/ik.tntn'
 ];
 
 function sanitizeText(text) {
