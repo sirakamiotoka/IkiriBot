@@ -123,11 +123,9 @@ try {
       body: [] 
     });
     console.log('既存のコマンドを削除しました');
-  } catch (error) {
-    console.error('コマンド削除エラー:', error);
-  }
+  
 
-    console.log('コマンド辞書登録');
+    console.log('コマンドを辞書登録します');
 
     // コマンドをDiscordサーバーに登録
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
