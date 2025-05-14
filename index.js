@@ -119,13 +119,14 @@ clientDiscord.on(Events.MessageCreate, async message => {
   }
 try {
     // 全コマンドを削除
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] });
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { 
+      body: [] 
+    });
     console.log('既存のコマンドを削除しました');
   } catch (error) {
     console.error('コマンド削除エラー:', error);
   }
-}
-  try {
+
     console.log('コマンド辞書登録');
 
     // コマンドをDiscordサーバーに登録
