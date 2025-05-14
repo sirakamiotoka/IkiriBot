@@ -182,25 +182,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 client.login(process.env.BOT_TOKEN);
 
 
-const { exec } = require('child_process');
 
-// npm install を実行する関数
-function installDependencies() {
-  exec('npm install', (err, stdout, stderr) => {
-    if (err) {
-      console.error(`Error executing npm install: ${err}`);
-      return;
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`npm install output: ${stdout}`);
-  });
-}
-
-// サーバー起動時に実行
-installDependencies();
 
 
 
