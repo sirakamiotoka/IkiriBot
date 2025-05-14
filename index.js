@@ -110,7 +110,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   
   // RESTクライアントを作成
 　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  if (content === '/ik.setcommand') {
+  if (content === '/ik.commandset') {
   let guildId = message.guild.id; // メッセージが送信されたサーバーのID
   const clientId = clientDiscord.user.id; // Bot自身のclientIdを動的に取得
 
@@ -126,7 +126,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
       body: commands,
     });
 
-    message.reply(`${guildId} に追加してやったぞ。有難く思えｗ`);
+    message.reply(`これで貸し１つだねｗ`);
   } catch (error) {
     console.error('コマンド登録エラー:', error);
     message.reply('コマンドの登録に失敗しました。');
