@@ -109,9 +109,10 @@ clientDiscord.on(Events.MessageCreate, async message => {
   const content = message.content;
   
   // RESTクライアントを作成
-　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+  /*
+const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
   if (content === '!ik.commandset') {
-  let guildId = message.guild.id; // メッセージが送信されたサーバーのID
+  guildId = message.guild.id; // メッセージが送信されたサーバーのID
   const clientId = clientDiscord.user.id; // Bot自身のclientIdを動的に取得
 
   if (!guildId) {
@@ -134,7 +135,7 @@ try {
     return;
 }
 
-/*
+
 // コマンド処理 (Interaction)
 clientDiscord.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
