@@ -23,15 +23,15 @@ const clientDiscord = new Client({
 // コマンド定義
 const commands = [
   {
-    name: '/ik.join',
+    name: 'ik.join',
     description: '何がなんでもVCに凸ります',
   },
   {
-    name: '/ik.kill',
+    name: 'ik.kill',
     description: 'いきってるBOTを抹消します',
   },
   {
-    name: '/ik.help',
+    name: 'ik.help',
     description: '助けを乞います',
   }
 ];
@@ -118,13 +118,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
     return message.reply('サーバーIDが取得できませんでした。');
   }
 try {
-    // 全コマンドを削除
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), { 
-      body: [] 
-    });
-    console.log('既存のコマンドを削除しました');
   
-
     console.log('コマンドを辞書登録します');
 
     // コマンドをDiscordサーバーに登録
