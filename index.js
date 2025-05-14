@@ -134,4 +134,5 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log(`Server is running at: https://ikiriBOT.up.railway.app:${3000}`);
 });
+console.log('BOT_TOKEN:', process.env.BOT_TOKEN ? '[OK]' : '[NOT FOUND]');
 
