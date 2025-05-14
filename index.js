@@ -102,7 +102,7 @@ clientDiscord.once(Events.ClientReady, c => {
   console.log((${c.user.tag}) が起動しました！);
 });
 
-clientDiscord.on(Events.MessageCreate, async message => {
+client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
