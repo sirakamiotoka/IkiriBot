@@ -110,7 +110,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   
   // RESTクライアントを作成
 　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  if (content.startsWith('/ik.setcommand')) {
+  if (content === '/ik.setcommand') {
   let guildId = message.guild.id; // メッセージが送信されたサーバーのID
   const clientId = clientDiscord.user.id; // Bot自身のclientIdを動的に取得
 
@@ -164,7 +164,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   }
 
   if (content === '/ik.help') {
-    message.reply('いやでーすwざまぁww少しは自分でなんとかしたら？w');
+    message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
