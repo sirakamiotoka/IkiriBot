@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "opusscript": "^0.0.8",
+    "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.18.0",
     "@google-cloud/text-to-speech": "^6.0.1",
     "@types/node": "^18.0.6",
