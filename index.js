@@ -107,29 +107,18 @@ clientDiscord.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
-  let guildId = null;
   
+  // RESTクライアントを作成
+const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
   // Bot自身のクライアントIDを取得
   const clientId = "1160889969313841152";
   
   // === コマンド処理（/ik.setcommand） ===
   if (content.startsWith('/ik.setcommand')) {
     // コマンドが送られたサーバーIDを取得
-    guildId = message.guild.id; // メッセージが送信されたサーバーのID
+    let guildId = message.guild.id; // メッセージが送信されたサーバーのID
     
-    
-
-    // guildIdを使って何か処理を行う（ここではコンソールに出力）
-    console.log(`Command received in guild: ${guildId}`);
-    
-    // 返答メッセージを送信
-    message.reply(`${guildId} に追加してやったぞ。有難く思えｗ`);
-    return;
-  }
-// RESTクライアントを作成
-const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-
-// コマンドをDiscordに登録する処理
+    // コマンドをDiscordに登録する処理
 (async () => {
   try {
     console.log('コマンド辞書登録');
@@ -144,6 +133,16 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
     console.error(error);
   }
 })();
+
+    
+    
+    // 返答メッセージを送信
+    message.reply(`${guildId} に追加してやったぞ。有難く思えｗ`);
+    return;
+  }
+
+
+
 // === コマンド処理（VC接続/切断/ヘルプ） ===
   if (content === '/ik.kill') {
     if (voiceConnection) {
