@@ -83,17 +83,14 @@ clientDiscord.once(Events.ClientReady, c => {
   console.log(`${c.user.tag} が起動しました！`);
 });
 
-clientDiscord.on(Events.MessageCreate, async message => {
-  if (message.author.bot) return;
-  const content = message.content;
+client.on(Events.MessageCreate, async message => {
+  if (message.author.bot) return;
+  const content = message.content;
 
   if (content === '!ik.kill') {
 
     voiceConnection = joinVoiceChannel({
-      channelId: message.member.voice.channel.id,
-      guildId: message.guild.id,
-      adapterCreator: message.guild.voiceAdapterCreator,
-    });
+  
     if (voiceConnection) {
       voiceConnection.destroy();
       //voiceConnection = null;
