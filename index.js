@@ -1,16 +1,9 @@
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
-const textToSpeech = require('@google-cloud/text-to-speech');
 const fs = require('fs');
 const https = require('https');
-const path = require('path');
-
-// Google Cloudのクライアント設定
-const client = new textToSpeech.TextToSpeechClient({
-  keyFilename: path.join(__dirname, 'credentials.json'),
-});
-
-const clientDiscord = new Client({
+const textToSpeech = require('@google-cloud/text-to-speech');
+const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
@@ -19,16 +12,19 @@ const clientDiscord = new Client({
   ]
 });
 
-//let activeChannel ;
-//let voiceConnection ;
-const audioQueue = [];
+let activeChannel = null;
+let voiceConnection = null;
+const audioQueue = []; // 読み上げキュー
 let isPlaying = false;
-const globalSpeed = 1.2;
+const globalSpeed = 1.2; // 固定速度
+
+// Google Cloud Text-to-Speech Client
+const ttsClient = new textToSpeech.TextToSpeechClient();
 
 function sanitizeText(text) {
   return text
-    .replace(/<a?:\w+:\d+>/g, '')
-    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n]/gu, '')
+    .replace(/<a?:\w+:\d+>/g, '') // カスタム絵文字
+    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n]/gu, '') // 記号や絵文字を除去
     .trim();
 }
 
@@ -36,21 +32,22 @@ function shortenText(text, limit = 50) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
 }
 
-async function speakText(text, lang = 'ja-JP', speed = 1.2, filepath = './message.mp3') {
+async function speakText(text, lang = 'ja', speed = 1.2, filepath = './message.mp3') {
   const request = {
     input: { text },
-    voice: { languageCode: lang, ssmlGender: 'NEUTRAL' },
+    voice: { languageCode: lang, name: `${lang}-Wavenet-A` },
     audioConfig: { audioEncoding: 'MP3', speakingRate: speed },
   };
 
   try {
-    const [response] = await client.synthesizeSpeech(request);
+    const [response] = await ttsClient.synthesizeSpeech(request);
+
     fs.writeFileSync(filepath, response.audioContent, 'binary');
-    console.log('Audio content written to file:', filepath);
+    console.log(`音声ファイルを作成しました: ${filepath}`);
     return filepath;
-  } catch (err) {
-    console.error('音声合成エラー:', err);
-    throw err;
+  } catch (error) {
+    console.error('読み上げエラー:', error);
+    throw error;
   }
 }
 
@@ -61,7 +58,7 @@ async function playNextInQueue() {
   isPlaying = true;
 
   try {
-    await speakText(text, 'ja-JP', globalSpeed, file);
+    await speakText(text, 'ja', globalSpeed, file);
     const player = createAudioPlayer();
     const resource = createAudioResource(file);
     player.play(resource);
@@ -70,30 +67,28 @@ async function playNextInQueue() {
     player.on(AudioPlayerStatus.Idle, () => {
       fs.unlink(file, () => {});
       isPlaying = false;
-      playNextInQueue();
+      playNextInQueue(); // 次の音声へ
     });
   } catch (err) {
     console.error('読み上げエラー:', err);
     isPlaying = false;
-    playNextInQueue();
+    playNextInQueue(); // エラー時もスキップして次へ
   }
 }
 
-clientDiscord.once(Events.ClientReady, c => {
-  console.log(`${c.user.tag} が起動しました！`);
+client.once(Events.ClientReady, c => {
+  console.log(`(${c.user.tag}) が起動しました！`);
 });
 
 client.on(Events.MessageCreate, async message => {
-  if (message.author.bot) return;
-  const content = message.content;
+  if (message.author.bot) return;
 
-  if (content === '!ik.kill') {
+  const content = message.content;
 
-    voiceConnection = joinVoiceChannel({
-  
+  // === コマンド処理（VC接続/切断/ヘルプ） ===
+  if (content === '/ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
-      //voiceConnection = null;
       activeChannel = null;
       message.reply('は？何してくれてんの？');
     } else {
@@ -102,7 +97,7 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
 
-  if (content === '!ik.join') {
+  if (content === '/ik.join') {
     if (!message.member.voice.channel) {
       message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
@@ -112,50 +107,45 @@ client.on(Events.MessageCreate, async message => {
       guildId: message.guild.id,
       adapterCreator: message.guild.voiceAdapterCreator,
     });
-
-    try {
-  await entersState(VoiceConnectionStatus.Ready, 5_000);
-  message.reply('Voice connection is ready!');
-} catch (error) {
-  message.reply('VC接続ができねえやんけ');
-}
     activeChannel = message.channel.id;
     message.reply('入った。だる。');
     return;
   }
 
-  if (content === '!ik.help') {
-    message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
+  if (content === '/ik.help') {
+    message.reply('教えませーんwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
-  if (content === '!ik.w') {
+  if (content === '/ik.w') {
     message.reply('何わろとんねん死んでくれ');
     return;
   }
 
-  if (content === '!ik.konamon') {
+  if (content === '/ik.konamon') {
     message.reply('ちんちん交通整備魂');
     return;
   }
 
-  if (content === '!ik.tntn') {
-    message.reply('こな〇んのヤり抜くっ!!');
+  if (content === '/ik.tntn') {
+    message.reply('こなもんのヤり抜くっ!!');
     return;
   }
 
+  // === 読み上げ処理（コマンド以外） ===
   if (voiceConnection && message.channel.id === activeChannel && !content.startsWith('/')) {
     let text = sanitizeText(content);
-    if (text.length === 0) return;
+    if (text.length === 0) return; // 画像・スタンプ・記号のみは無視
     text = shortenText(text);
     audioQueue.push({ text, file: './message.mp3' });
     playNextInQueue();
   }
 });
 
-clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
+client.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnection || !activeChannel) return;
 
+  // ユーザーの出入りアナウンス
   let text = null;
   if (!oldState.channel && newState.channel) {
     text = `${newState.member.displayName}が侵入しよった。`;
@@ -168,6 +158,7 @@ clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
     playNextInQueue();
   }
 
+  // VCにBot以外の人がいなければ自動切断＆メッセージ送信
   const channel = voiceConnection.joinConfig.channelId
     ? newState.guild.channels.cache.get(voiceConnection.joinConfig.channelId)
     : null;
@@ -178,7 +169,7 @@ clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
       voiceConnection.destroy();
       voiceConnection = null;
 
-      const textChannel = clientDiscord.channels.cache.get(activeChannel);
+      const textChannel = client.channels.cache.get(activeChannel);
       if (textChannel && textChannel.isTextBased()) {
         textChannel.send('誰もVCにいなくなったので自害します');
       }
@@ -188,17 +179,18 @@ clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
   }
 });
 
-clientDiscord.login(process.env.BOT_TOKEN);
-
+// Expressで常駐化
 const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send('Bot is running');
+  res.send('Bot is running!');
 });
 
-app.listen(3000, () => {
-  console.log(`Server is running at: https://ikiriBOT.up.railway.app:${3000}`);
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+  console.log(`Your app is available at: https://your-replit-username.repl.co`);
 });
 
-console.log('BOT_TOKEN:', process.env.BOT_TOKEN ? '[OK]' : '[NOT FOUND]');
+client.login(process.env.BOT_TOKEN);
