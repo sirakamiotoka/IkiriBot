@@ -36,27 +36,6 @@ const commands = [
   }
 ];
 
-// トークンなどの設定を読み込む
-const { token, clientId, guildId } = require('./config.json');
-
-// RESTクライアントを作成
-const rest = new REST({ version: '10' }).setToken(token);
-
-// コマンドをDiscordに登録する処理
-(async () => {
-  try {
-    console.log('Started refreshing application (/) commands.');
-
-    // コマンドをDiscordサーバーに登録
-    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
-      body: commands,
-    });
-
-    console.log('Successfully reloaded application (/) commands.');
-  } catch (error) {
-    console.error(error);
-  }
-})();
 
 
 let activeChannel = null;
@@ -130,6 +109,37 @@ clientDiscord.on(Events.MessageCreate, async message => {
   const content = message.content;
 
   // === コマンド処理（VC接続/切断/ヘルプ） ===
+  // === コマンド処理（/ik.setcommand） ===
+  if (message.content.startsWith('/ik.setcommand')) {
+    // コマンドが送られたサーバーIDを取得
+    const guildId = message.guild.id; // メッセージが送信されたサーバーのID
+
+    // guildIdを使って何か処理を行う（ここではコンソールに出力）
+    console.log(`Command received in guild: ${guildId}`);
+    
+    // 返答メッセージを送信
+    message.reply(`このコマンドはサーバーID ${guildId} で実行されました！`);
+    return;
+  }
+// RESTクライアントを作成
+const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+
+// コマンドをDiscordに登録する処理
+(async () => {
+  try {
+    console.log('Started refreshing application (/) commands.');
+
+    // コマンドをDiscordサーバーに登録
+    await rest.put(Routes.applicationGuildCommands(client.user.id, guildId), {
+      body: commands,
+    });
+
+    console.log('Successfully reloaded application (/) commands.');
+  } catch (error) {
+    console.error(error);
+  }
+})();
+
   if (content === '/ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
