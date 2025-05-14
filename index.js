@@ -110,15 +110,13 @@ clientDiscord.on(Events.MessageCreate, async message => {
   
   // RESTクライアントを作成
 　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  // Bot自身のクライアントIDを取得
-  const clientId = "1160889969313841152";
-  
-  // === コマンド処理（/ik.setcommand） ===
   if (content.startsWith('/ik.setcommand')) {
-    // コマンドが送られたサーバーIDを取得
-    let guildId = message.guild.id; // メッセージが送信されたサーバーのID
-    
-    // コマンドをDiscordに登録する処理
+  let guildId = message.guild.id; // メッセージが送信されたサーバーのID
+  const clientId = clientDiscord.user.id; // Bot自身のclientIdを動的に取得
+
+  if (!guildId) {
+    return message.reply('サーバーIDが取得できませんでした。');
+  }
 
   try {
     console.log('コマンド辞書登録');
@@ -128,17 +126,13 @@ clientDiscord.on(Events.MessageCreate, async message => {
       body: commands,
     });
 
-    console.log('成功！');
-  } catch (error) {
-    console.error(error);
-  }
-
-    
-    
-    // 返答メッセージを送信
     message.reply(`${guildId} に追加してやったぞ。有難く思えｗ`);
-    return;
+    message.reply(`${guildId} にコマンドが登録されました！`);
+  } catch (error) {
+    console.error('コマンド登録エラー:', error);
+    message.reply('コマンドの登録に失敗しました。');
   }
+}
 
 
 
