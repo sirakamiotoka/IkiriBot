@@ -1,10 +1,16 @@
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
-const googleTTS = require('google-tts-api');
+const textToSpeech = require('@google-cloud/text-to-speech');
 const fs = require('fs');
 const https = require('https');
+const path = require('path');
 
-const client = new Client({
+// Google Cloudのクライアント設定
+const client = new textToSpeech.TextToSpeechClient({
+  keyFilename: path.join(__dirname, 'credentials.json'), // サービスアカウントのJSONファイル
+});
+
+const clientDiscord = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
@@ -30,24 +36,23 @@ function shortenText(text, limit = 50) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
 }
 
-async function speakText(text, lang = 'ja', speed = 1.2, filepath = './message.mp3') {
-  const url = googleTTS.getAudioUrl(text, {
-    lang,
-    slow: false,
-    host: 'https://translate.google.com',
-    speed,
-  });
+// Google Cloud Text-to-Speech APIで音声合成
+async function speakText(text, lang = 'ja-JP', speed = 1.2, filepath = './message.mp3') {
+  const request = {
+    input: { text },
+    voice: { languageCode: lang, ssmlGender: 'NEUTRAL' },
+    audioConfig: { audioEncoding: 'MP3', speakingRate: speed },
+  };
 
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(filepath);
-    https.get(url, res => {
-      res.pipe(file);
-      file.on('finish', () => file.close(() => resolve(filepath)));
-    }).on('error', err => {
-      fs.unlink(filepath, () => {});
-      reject(err);
-    });
-  });
+  try {
+    const [response] = await client.synthesizeSpeech(request);
+    fs.writeFileSync(filepath, response.audioContent, 'binary');
+    console.log('Audio content written to file:', filepath);
+    return filepath;
+  } catch (err) {
+    console.error('音声合成エラー:', err);
+    throw err;
+  }
 }
 
 async function playNextInQueue() {
@@ -57,7 +62,7 @@ async function playNextInQueue() {
   isPlaying = true;
 
   try {
-    await speakText(text, 'ja', globalSpeed, file);
+    await speakText(text, 'ja-JP', globalSpeed, file);
     const player = createAudioPlayer();
     const resource = createAudioResource(file);
     player.play(resource);
@@ -75,11 +80,11 @@ async function playNextInQueue() {
   }
 }
 
-client.once(Events.ClientReady, c => {
+clientDiscord.once(Events.ClientReady, c => {
   console.log(`(${c.user.tag}) が起動しました！`);
 });
 
-client.on(Events.MessageCreate, async message => {
+clientDiscord.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
@@ -141,7 +146,7 @@ client.on(Events.MessageCreate, async message => {
   }
 });
 
-client.on('voiceStateUpdate', (oldState, newState) => {
+clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnection || !activeChannel) return;
 
   // ユーザーの出入りアナウンス
@@ -178,13 +183,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   }
 });
 
-
-client.login(process.env.BOT_TOKEN);
-
-
-
-
-
+clientDiscord.login(process.env.BOT_TOKEN);
 
 const express = require('express');
 const app = express();
@@ -196,5 +195,5 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log(`Server is running at: https://ikiriBOT.up.railway.app:${3000}`);
 });
-console.log('BOT_TOKEN:', process.env.BOT_TOKEN ? '[OK]' : '[NOT FOUND]');
 
+console.log('BOT_TOKEN:', process.env.BOT_TOKEN ? '[OK]' : '[NOT FOUND]');
