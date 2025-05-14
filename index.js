@@ -107,14 +107,15 @@ clientDiscord.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
-
-  // === コマンド処理（VC接続/切断/ヘルプ） ===
+  let guildId = null;
+  const clientId = null;
+  
   // === コマンド処理（/ik.setcommand） ===
-  if (message.content.startsWith('/ik.setcommand')) {
+  if (content.startsWith('/ik.setcommand')) {
     // コマンドが送られたサーバーIDを取得
-    const guildId = message.guild.id; // メッセージが送信されたサーバーのID
+    let guildId = message.guild.id; // メッセージが送信されたサーバーのID
     // Bot自身のクライアントIDを取得
-    const clientId = "1160889969313841152";
+    let clientId = "1160889969313841152";
 
     // guildIdを使って何か処理を行う（ここではコンソールに出力）
     console.log(`Command received in guild: ${guildId}`);
@@ -141,7 +142,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
     console.error(error);
   }
 })();
-
+// === コマンド処理（VC接続/切断/ヘルプ） ===
   if (content === '/ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
