@@ -109,6 +109,13 @@ clientDiscord.on(Events.MessageCreate, async message => {
       guildId: message.guild.id,
       adapterCreator: message.guild.voiceAdapterCreator,
     });
+
+    try {
+  await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5_000);
+  console.log('Voice connection is ready!');
+} catch (error) {
+  console.error('VC接続ができねえやんけ:', error);
+}
     activeChannel = message.channel.id;
     message.reply('入った。だる。');
     return;
