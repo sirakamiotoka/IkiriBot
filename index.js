@@ -115,7 +115,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   // === コマンド処理（/ik.setcommand） ===
   if (content.startsWith('/ik.setcommand')) {
     // コマンドが送られたサーバーIDを取得
-    let guildId = message.guild.id; // メッセージが送信されたサーバーのID
+    guildId = message.guild.id; // メッセージが送信されたサーバーのID
     
     
 
