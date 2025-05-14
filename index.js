@@ -175,7 +175,7 @@ clientDiscord.on('interactionCreate', async interaction => {
 });
 */
   //メッセージで受け取った場合
-  clientDiscord.on(Events.MessageCreate, async message => {
+  client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
   const content = message.content;
     
