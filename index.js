@@ -228,6 +228,7 @@ clientDiscord.on('interactionCreate', async interaction => {
     message.reply('こな〇んのヤり抜くっ!!');
     return;
   }
+  });
 
   // === 読み上げ処理（コマンド以外） ===
   if (voiceConnection && message.channel.id === activeChannel && !content.startsWith('/')) {
@@ -238,7 +239,6 @@ clientDiscord.on('interactionCreate', async interaction => {
     playNextInQueue();
   }
 });
-
 clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnection || !activeChannel) return;
 
