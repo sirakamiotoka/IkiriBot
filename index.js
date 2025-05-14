@@ -19,6 +19,43 @@ const clientDiscord = new Client({
   ]
 });
 
+//実験
+
+const commands = [
+  
+  {
+    name: 'join',
+    description: '何がなんでもVCに凸ります',
+  },
+  {
+    name: 'kill',
+    description: 'いきってるBOTを抹消します',
+  },
+  {
+    name: 'help',
+    description: '助けを乞います',
+  }
+];
+
+const rest = new REST({ version: '10' }).setToken(token);
+
+(async () => {
+  try {
+    console.log('Started refreshing application (/) commands.');
+
+    // コマンドをDiscordに登録
+    await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: commands,
+    });
+
+    console.log('Successfully reloaded application (/) commands.');
+  } catch (error) {
+    console.error(error);
+  }
+})();
+//追加
+
+
 let activeChannel = null;
 let voiceConnection = null;
 const audioQueue = []; // 読み上げキュー
@@ -117,7 +154,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   }
 
   if (content === '/ik.help') {
-    message.reply('教えませーんwざまぁww少しは自分でなんとかしたら？w');
+    message.reply('いやでーすwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
