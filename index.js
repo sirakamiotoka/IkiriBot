@@ -171,6 +171,7 @@ client.on('interactionCreate', async interaction => {
     message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
+  });
   //メッセージで受け取った場合
   if (content === '/ik_kill') {
     if (voiceConnection) {
