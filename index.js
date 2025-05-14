@@ -1,16 +1,11 @@
-// 必要なモジュールのインポート
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const textToSpeech = require('@google-cloud/text-to-speech');
-const util = require('util');
+const gTTS = require('gtts');
+const express = require('express');
 
-// Google Cloud Text-to-Speech クライアントの初期化
-const ttsClient = new textToSpeech.TextToSpeechClient();
-
-// Discordクライアントの初期化
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -20,52 +15,41 @@ const client = new Client({
   ]
 });
 
-// グローバル変数の定義
+// グローバル変数
 let activeChannel = null;
 let voiceConnection = null;
 const audioQueue = [];
 let isPlaying = false;
-const globalSpeed = 1.2; // 読み上げ速度
 
 // テキストのサニタイズ
 function sanitizeText(text) {
   return text
-    .replace(/<a?:\w+:\d+>/g, '') // カスタム絵文字の除去
-    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n]/gu, '') // 記号や絵文字の除去
+    .replace(/<a?:\w+:\d+>/g, '') // カスタム絵文字除去
+    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n]/gu, '') // 記号など除去
     .trim();
 }
 
-// テキストの短縮
+// テキスト短縮
 function shortenText(text, limit = 50) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
 }
 
-// テキストを音声に変換し、MP3ファイルとして保存
-async function speakText(text, lang = 'ja-JP', speed = 1.2, filepath) {
-  const request = {
-    input: { text },
-    voice: {
-      languageCode: lang,
-      ssmlGender: 'NEUTRAL',
-    },
-    audioConfig: {
-      audioEncoding: 'MP3',
-      speakingRate: speed,
-    },
-  };
-
-  try {
-    const [response] = await ttsClient.synthesizeSpeech(request);
-    const writeFile = util.promisify(fs.writeFile);
-    await writeFile(filepath, response.audioContent, 'binary');
-    return filepath;
-  } catch (err) {
-    console.error('音声合成エラー:', err);
-    throw err;
-  }
+// gTTSで音声生成
+async function speakText(text, lang = 'ja', filepath) {
+  return new Promise((resolve, reject) => {
+    const gtts = new gTTS(text, lang, false); // speed固定: false = ノーマル
+    gtts.save(filepath, (err) => {
+      if (err) {
+        console.error('gTTS エラー:', err);
+        reject(err);
+      } else {
+        resolve(filepath);
+      }
+    });
+  });
 }
 
-// キュー内の次の音声を再生
+// 音声再生
 async function playNextInQueue() {
   if (isPlaying || audioQueue.length === 0 || !voiceConnection) return;
 
@@ -73,7 +57,7 @@ async function playNextInQueue() {
   isPlaying = true;
 
   try {
-    await speakText(text, 'ja-JP', globalSpeed, file);
+    await speakText(text, 'ja', file);
     const player = createAudioPlayer();
     const resource = createAudioResource(file);
     player.play(resource);
@@ -84,27 +68,26 @@ async function playNextInQueue() {
         if (err) console.error(`ファイル削除エラー: ${err}`);
       });
       isPlaying = false;
-      playNextInQueue(); // 次の音声へ
+      playNextInQueue(); // 次へ
     });
   } catch (err) {
     console.error('読み上げエラー:', err);
     isPlaying = false;
-    playNextInQueue(); // エラー時もスキップして次へ
+    playNextInQueue(); // スキップ
   }
 }
 
-// Botの準備完了時の処理
+// Bot起動時
 client.once(Events.ClientReady, c => {
   console.log(`(${c.user.tag}) が起動しました！`);
 });
 
-// メッセージ受信時の処理
+// メッセージ処理
 client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
 
-  // コマンド処理
   if (content === '/ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
@@ -151,10 +134,10 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
 
-  // 読み上げ処理（コマンド以外）
+  // 通常メッセージ読み上げ
   if (voiceConnection && message.channel.id === activeChannel && !content.startsWith('/')) {
     let text = sanitizeText(content);
-    if (text.length === 0) return; // 画像・スタンプ・記号のみは無視
+    if (text.length === 0) return;
     text = shortenText(text);
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
@@ -163,11 +146,10 @@ client.on(Events.MessageCreate, async message => {
   }
 });
 
-// ボイスチャンネルの状態更新時の処理
+// VCの出入りを読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnection || !activeChannel) return;
 
-  // ユーザーの出入りアナウンス
   let text = null;
   if (!oldState.channel && newState.channel) {
     text = `${newState.member.displayName}が侵入しよった。`;
@@ -182,7 +164,6 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     playNextInQueue();
   }
 
-  // VCにBot以外の人がいなければ自動切断＆メッセージ送信
   const channel = voiceConnection.joinConfig.channelId
     ? newState.guild.channels.cache.get(voiceConnection.joinConfig.channelId)
     : null;
@@ -203,19 +184,15 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   }
 });
 
-// Expressで常駐化（Replitなどで使用）
-const express = require('express');
+// Expressサーバー（常駐用）
 const app = express();
-
 app.get('/', (req, res) => {
   res.send('Bot is running!');
 });
-
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
-  console.log(`Your app is available at: https://your-replit-username.repl.co`);
 });
 
-// Discord Botのログイン
+// Discordログイン
 client.login(process.env.BOT_TOKEN);
