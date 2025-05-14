@@ -14,11 +14,12 @@
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.18.0",
-    "@google-cloud/text-to-speech": "^6.0.1",
+    
     "@types/node": "^18.0.6",
     "discord.js": "^14.8.0",
     "express": "^5.1.0",
     "ffmpeg-static": "^5.2.0",
+     "google-tts-api": "^2.0.2",
     "gtts": "^0.2.1",
     "libsodium-wrappers": "^0.7.15"
   }
