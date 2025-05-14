@@ -115,7 +115,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
     // コマンドが送られたサーバーIDを取得
     let guildId = message.guild.id; // メッセージが送信されたサーバーのID
     // Bot自身のクライアントIDを取得
-    let clientId = "1160889969313841152";
+    clientId = "1160889969313841152";
 
     // guildIdを使って何か処理を行う（ここではコンソールに出力）
     console.log(`Command received in guild: ${guildId}`);
