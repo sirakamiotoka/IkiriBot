@@ -112,9 +112,9 @@ clientDiscord.on(Events.MessageCreate, async message => {
 
     try {
   await entersState(voiceConnection, VoiceConnectionStatus.Ready, 5_000);
-  console.log('Voice connection is ready!');
+  message.reply('Voice connection is ready!');
 } catch (error) {
-  console.error('VC接続ができねえやんけ:', error);
+  message.reply('VC接続ができねえやんけ');
 }
     activeChannel = message.channel.id;
     message.reply('入った。だる。');
