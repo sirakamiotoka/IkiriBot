@@ -135,43 +135,44 @@ try {
 }
 
 
-client.on('interactionCreate', async interaction => {
+// コマンド処理 (Interaction)
+clientDiscord.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
 
   const { commandName } = interaction;
-// === コマンド処理（VC接続/切断/ヘルプ） ===
-  
+
+  // === コマンド処理（VC接続/切断/ヘルプ） ===
   if (commandName === 'ik_kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
       activeChannel = null;
-      message.reply('は？何してくれてんの？');
+      interaction.reply('は？何してくれてんの？');
     } else {
-      message.reply('どこにも繋いでないねwざんねん！w');
+      interaction.reply('どこにも繋いでないねwざんねん！w');
     }
     return;
   }
 
   if (commandName === 'ik_join') {
-    if (!message.member.voice.channel) {
-      message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
+    if (!interaction.member.voice.channel) {
+      interaction.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
     }
     voiceConnection = joinVoiceChannel({
-      channelId: message.member.voice.channel.id,
-      guildId: message.guild.id,
-      adapterCreator: message.guild.voiceAdapterCreator,
+      channelId: interaction.member.voice.channel.id,
+      guildId: interaction.guild.id,
+      adapterCreator: interaction.guild.voiceAdapterCreator,
     });
-    activeChannel = message.channel.id;
-    message.reply('入った。だる。');
+    activeChannel = interaction.channel.id;
+    interaction.reply('入った。だる。');
     return;
   }
 
   if (commandName === 'ik_help') {
-    message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
+    interaction.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
-  });
+});
   //メッセージで受け取った場合
   if (content === '/ik_kill') {
     if (voiceConnection) {
