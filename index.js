@@ -129,7 +129,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
     message.reply(`これで貸し１つだねｗ`);
   } catch (error) {
     console.error('コマンド登録エラー:', error);
-    message.reply('コマンドの登録に失敗しました。');
+    message.reply('登録に失敗したわ。ふざけんな。');
   }
     return;
 }
