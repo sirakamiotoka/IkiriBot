@@ -109,7 +109,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   const content = message.content;
   
   // RESTクライアントを作成
-const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
   // Bot自身のクライアントIDを取得
   const clientId = "1160889969313841152";
   
@@ -119,7 +119,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
     let guildId = message.guild.id; // メッセージが送信されたサーバーのID
     
     // コマンドをDiscordに登録する処理
-(async () => {
+
   try {
     console.log('コマンド辞書登録');
 
@@ -128,11 +128,10 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
       body: commands,
     });
 
-    console.log('Successfully reloaded application (/) commands.');
+    console.log('成功！');
   } catch (error) {
     console.error(error);
   }
-})();
 
     
     
