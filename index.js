@@ -142,7 +142,7 @@ clientDiscord.on('interactionCreate', async interaction => {
   const { commandName } = interaction;
 
   // === コマンド処理（VC接続/切断/ヘルプ） ===
-  if (commandName === 'ik_kill') {
+  /*if (commandName === 'ik_kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
       activeChannel = null;
@@ -173,6 +173,7 @@ clientDiscord.on('interactionCreate', async interaction => {
     return;
   }
 });
+*/
   //メッセージで受け取った場合
   if (content === '!ik.kill') {
     if (voiceConnection) {
