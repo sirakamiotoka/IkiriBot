@@ -134,7 +134,7 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log('Web server is running on port 3000');
 });
-app.listen(port, () => {
-  console.log(`Server is running at: https://your-app-name.up.railway.app:${port}`);
+app.listen(3000, () => {
+  console.log(`Server is running at: https://your-app-name.up.railway.app:${3000}`);
 });
 
