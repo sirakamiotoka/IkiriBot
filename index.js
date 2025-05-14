@@ -101,6 +101,11 @@ client.on(Events.MessageCreate, async message => {
   }
 
   if (content === '/ik.join') {
+    if (voiceConnection && voiceConnection.state.status !== 'destroyed') {
+    message.reply('もう入ってるやんｗ目ぇついてますか？ｗｗｗ');
+    return;
+  }
+
     if (!message.member.voice.channel) {
       message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
