@@ -88,7 +88,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   const content = message.content;
 
   if (content === '!ik.kill') {
-    if (voiceConnection) {
+    if (voiceConnection||voiceConnection.joinConfig.channelId) {
       voiceConnection.destroy();
       voiceConnection = null;
       activeChannel = null;
