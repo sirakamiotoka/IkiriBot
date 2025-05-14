@@ -24,15 +24,15 @@ const clientDiscord = new Client({
 const commands = [
   {
     name: 'ik_join',
-    description: '何がなんでもVCに凸ります',
+    description: '何がなんでもVCに凸ります(/コマンドからは作成中)',
   },
   {
     name: 'ik_kill',
-    description: 'いきってるBOTを抹消します',
+    description: 'いきってるBOTを抹消します(/コマンドからは作成中)',
   },
   {
     name: 'ik_help',
-    description: '助けを乞います',
+    description: '助けを乞います(/コマンドからは作成中)',
   }
 ];
 
@@ -110,7 +110,7 @@ clientDiscord.on(Events.MessageCreate, async message => {
   
   // RESTクライアントを作成
 　const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  if (content === '/ik_commandset') {
+  if (content === '!ik_commandset') {
   let guildId = message.guild.id; // メッセージが送信されたサーバーのID
   const clientId = clientDiscord.user.id; // Bot自身のclientIdを動的に取得
 
@@ -174,7 +174,7 @@ clientDiscord.on('interactionCreate', async interaction => {
   }
 });
   //メッセージで受け取った場合
-  if (content === '/ik_kill') {
+  if (content === '!ik_kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
       activeChannel = null;
@@ -185,7 +185,7 @@ clientDiscord.on('interactionCreate', async interaction => {
     return;
   }
 
-  if (content === '/ik_join') {
+  if (content === '!ik_join') {
     if (!message.member.voice.channel) {
       message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
@@ -200,24 +200,24 @@ clientDiscord.on('interactionCreate', async interaction => {
     return;
   }
 
-  if (content === '/ik_help') {
+  if (content === '!ik_help') {
     message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
 
   //辞書には関係なしコマンド
-  if (content === '/ik_w') {
+  if (content === '!ik_w') {
     message.reply('何わろとんねん死んでくれ');
     return;
   }
 
-  if (content === '/ik_konamon') {
+  if (content === '!ik_konamon') {
     message.reply('ちんちん交通整備魂');
     return;
   }
 
-  if (content === '/ik_tntn') {
+  if (content === '!ik_tntn') {
     message.reply('こなもんのヤり抜くっ!!');
     return;
   }
