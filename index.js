@@ -1,4 +1,4 @@
-const { Client, Events, GatewayIntentBits } = require('discord.js');
+const { Client, Events, GatewayIntentBits, REST, Routes } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const textToSpeech = require('@google-cloud/text-to-speech');
 const fs = require('fs');
@@ -20,9 +20,8 @@ const clientDiscord = new Client({
 });
 
 //実験
-
+// コマンド定義
 const commands = [
-  
   {
     name: 'join',
     description: '何がなんでもVCに凸ります',
@@ -37,13 +36,18 @@ const commands = [
   }
 ];
 
+// トークンなどの設定を読み込む
+const { token, clientId, guildId } = require('./config.json');
+
+// RESTクライアントを作成
 const rest = new REST({ version: '10' }).setToken(token);
 
+// コマンドをDiscordに登録する処理
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
 
-    // コマンドをDiscordに登録
+    // コマンドをDiscordサーバーに登録
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
       body: commands,
     });
@@ -53,7 +57,6 @@ const rest = new REST({ version: '10' }).setToken(token);
     console.error(error);
   }
 })();
-//追加
 
 
 let activeChannel = null;
