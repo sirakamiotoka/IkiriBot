@@ -218,7 +218,7 @@ clientDiscord.on('interactionCreate', async interaction => {
   }
 
   if (content === '!ik.tntn') {
-    message.reply('こなもんのヤり抜くっ!!');
+    message.reply('こな〇んのヤり抜くっ!!');
     return;
   }
 
