@@ -174,7 +174,7 @@ clientDiscord.on('interactionCreate', async interaction => {
   }
 });
   //メッセージで受け取った場合
-  if (content === '!ik_kill') {
+  if (content === '!ik.kill') {
     if (voiceConnection) {
       voiceConnection.destroy();
       activeChannel = null;
@@ -185,7 +185,7 @@ clientDiscord.on('interactionCreate', async interaction => {
     return;
   }
 
-  if (content === '!ik_join') {
+  if (content === '!ik.join') {
     if (!message.member.voice.channel) {
       message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
@@ -200,24 +200,24 @@ clientDiscord.on('interactionCreate', async interaction => {
     return;
   }
 
-  if (content === '!ik_help') {
+  if (content === '!ik.help') {
     message.reply('いやだねwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
 
   //辞書には関係なしコマンド
-  if (content === '!ik_w') {
+  if (content === '!ik.w') {
     message.reply('何わろとんねん死んでくれ');
     return;
   }
 
-  if (content === '!ik_konamon') {
+  if (content === '!ik.konamon') {
     message.reply('ちんちん交通整備魂');
     return;
   }
 
-  if (content === '!ik_tntn') {
+  if (content === '!ik.tntn') {
     message.reply('こなもんのヤり抜くっ!!');
     return;
   }
