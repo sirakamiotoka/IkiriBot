@@ -23,15 +23,15 @@ const clientDiscord = new Client({
 // コマンド定義
 const commands = [
   {
-    name: 'join',
+    name: '/ik.join',
     description: '何がなんでもVCに凸ります',
   },
   {
-    name: 'kill',
+    name: '/ik.kill',
     description: 'いきってるBOTを抹消します',
   },
   {
-    name: 'help',
+    name: '/ik.help',
     description: '助けを乞います',
   }
 ];
