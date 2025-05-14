@@ -18,7 +18,7 @@ const clientDiscord = new Client({
     GatewayIntentBits.MessageContent
   ]
 });
-
+/*
 //実験
 // コマンド定義
 const commands = [
@@ -35,8 +35,7 @@ const commands = [
     description: '助けを乞います(/コマンドからは作成中)',
   }
 ];
-
-
+*/
 
 let activeChannel = null;
 let voiceConnection = null;
