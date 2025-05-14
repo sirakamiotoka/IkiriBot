@@ -19,8 +19,8 @@ const clientDiscord = new Client({
   ]
 });
 
-let activeChannel = null;
-let voiceConnection = null;
+let activeChannel ;
+let voiceConnection ;
 const audioQueue = [];
 let isPlaying = false;
 const globalSpeed = 1.2;
