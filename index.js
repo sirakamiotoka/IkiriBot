@@ -15,11 +15,11 @@ const client = new Client({
   ]
 });
 
-// グローバル変数
-let activeChannel = null;
-let voiceConnection = null;
-const audioQueue = [];
-let isPlaying = false;
+// グローバル変数をサーバーごとに管理
+let activeChannels = {};  // サーバーごとのactiveChannel
+let voiceConnections = {}; // サーバーごとのvoiceConnection
+const audioQueue = {};  // サーバーごとのaudioQueue
+let isPlaying = {}; // サーバーごとの再生状態
 
 // テキストのサニタイズ
 function sanitizeText(text) {
@@ -49,31 +49,31 @@ async function speakText(text, lang = 'ja', filepath) {
   });
 }
 
-// 音声再生
-async function playNextInQueue() {
-  if (isPlaying || audioQueue.length === 0 || !voiceConnection) return;
+// 音声再生関数をサーバーごとに管理
+async function playNextInQueue(guildId) {
+  if (isPlaying[guildId] || audioQueue[guildId].length === 0 || !voiceConnections[guildId]) return;
 
-  const { text, file } = audioQueue.shift();
-  isPlaying = true;
+  const { text, file } = audioQueue[guildId].shift();
+  isPlaying[guildId] = true;
 
   try {
     await speakText(text, 'ja', file);
     const player = createAudioPlayer();
     const resource = createAudioResource(file);
     player.play(resource);
-    voiceConnection.subscribe(player);
+    voiceConnections[guildId].subscribe(player);
 
     player.on(AudioPlayerStatus.Idle, () => {
       fs.unlink(file, (err) => {
         if (err) console.error(`ファイル削除エラー: ${err}`);
       });
-      isPlaying = false;
-      playNextInQueue(); // 次へ
+      isPlaying[guildId] = false;
+      playNextInQueue(guildId); // 次へ
     });
   } catch (err) {
     console.error('読み上げエラー:', err);
-    isPlaying = false;
-    playNextInQueue(); // スキップ
+    isPlaying[guildId] = false;
+    playNextInQueue(guildId); // スキップ
   }
 }
 
@@ -87,12 +87,13 @@ client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   const content = message.content;
+  const guildId = message.guild.id;
 
   if (content === '/ik.kill') {
-    if (voiceConnection) {
-      voiceConnection.destroy();
-      voiceConnection = null;
-      activeChannel = null;
+    if (voiceConnections[guildId]) {
+      voiceConnections[guildId].destroy();
+      voiceConnections[guildId] = null;
+      activeChannels[guildId] = null;
       message.reply('は？何してくれてんの？');
     } else {
       message.reply('どこにも繋いでないねwざんねん！w');
@@ -101,21 +102,21 @@ client.on(Events.MessageCreate, async message => {
   }
 
   if (content === '/ik.join') {
-    if (voiceConnection) {
-    message.reply('もう入ってるやんｗ目ぇついてますか？ｗｗｗ');
-    return;
-  }
+    if (voiceConnections[guildId]) {
+      message.reply('もう入ってるやんｗ目ぇついてますか？ｗｗｗ');
+      return;
+    }
 
     if (!message.member.voice.channel) {
       message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
       return;
     }
-    voiceConnection = joinVoiceChannel({
+    voiceConnections[guildId] = joinVoiceChannel({
       channelId: message.member.voice.channel.id,
       guildId: message.guild.id,
       adapterCreator: message.guild.voiceAdapterCreator,
     });
-    activeChannel = message.channel.id;
+    activeChannels[guildId] = message.channel.id;
     message.reply('入った。だる。');
     return;
   }
@@ -141,20 +142,23 @@ client.on(Events.MessageCreate, async message => {
   }
 
   // 通常メッセージ読み上げ
-  if (voiceConnection && message.channel.id === activeChannel && !content.startsWith('/')) {
+  if (voiceConnections[guildId] && message.channel.id === activeChannels[guildId] && !content.startsWith('/')) {
     let text = sanitizeText(content);
     if (text.length === 0) return;
     text = shortenText(text);
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
-    audioQueue.push({ text, file: filePath });
-    playNextInQueue();
+    
+    if (!audioQueue[guildId]) audioQueue[guildId] = [];
+    audioQueue[guildId].push({ text, file: filePath });
+    playNextInQueue(guildId);
   }
 });
 
 // VCの出入りを読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
-  if (!voiceConnection || !activeChannel) return;
+  const guildId = newState.guild.id;
+  if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
   let text = null;
   if (!oldState.channel && newState.channel) {
@@ -166,26 +170,27 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (text) {
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `vc_notice_${uniqueId}.mp3`);
-    audioQueue.push({ text, file: filePath });
-    playNextInQueue();
+    if (!audioQueue[guildId]) audioQueue[guildId] = [];
+    audioQueue[guildId].push({ text, file: filePath });
+    playNextInQueue(guildId);
   }
 
-  const channel = voiceConnection.joinConfig.channelId
-    ? newState.guild.channels.cache.get(voiceConnection.joinConfig.channelId)
+  const channel = voiceConnections[guildId].joinConfig.channelId
+    ? newState.guild.channels.cache.get(voiceConnections[guildId].joinConfig.channelId)
     : null;
 
   if (channel) {
     const nonBotMembers = channel.members.filter(member => !member.user.bot);
     if (nonBotMembers.size === 0) {
-      voiceConnection.destroy();
-      voiceConnection = null;
+      voiceConnections[guildId].destroy();
+      voiceConnections[guildId] = null;
 
-      const textChannel = client.channels.cache.get(activeChannel);
+      const textChannel = client.channels.cache.get(activeChannels[guildId]);
       if (textChannel && textChannel.isTextBased()) {
         textChannel.send('誰もVCにいなくなったので自害します');
       }
 
-      activeChannel = null;
+      activeChannels[guildId] = null;
     }
   }
 });
