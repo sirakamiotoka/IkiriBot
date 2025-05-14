@@ -127,11 +127,11 @@ clientDiscord.on(Events.MessageCreate, async message => {
     });
 
     message.reply(`${guildId} に追加してやったぞ。有難く思えｗ`);
-    message.reply(`${guildId} にコマンドが登録されました！`);
   } catch (error) {
     console.error('コマンド登録エラー:', error);
     message.reply('コマンドの登録に失敗しました。');
   }
+    return;
 }
 
 
