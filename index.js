@@ -99,7 +99,7 @@ async function playNextInQueue() {
 }
 
 clientDiscord.once(Events.ClientReady, c => {
-  console.log(`(${c.user.tag}) が起動しました！`);
+  console.log((${c.user.tag}) が起動しました！);
 });
 
 clientDiscord.on(Events.MessageCreate, async message => {
@@ -126,7 +126,7 @@ try {
       body: commands,
     });
 
-    message.reply(`これで貸し１つだねｗ`);
+    message.reply(これで貸し１つだねｗ);
   } catch (error) {
     console.error('コマンド登録エラー:', error);
     message.reply('登録に失敗したわ。ふざけんな。');
@@ -245,9 +245,9 @@ clientDiscord.on('voiceStateUpdate', (oldState, newState) => {
   // ユーザーの出入りアナウンス
   let text = null;
   if (!oldState.channel && newState.channel) {
-    text = `${newState.member.displayName}が侵入しよった。`;
+    text = ${newState.member.displayName}が侵入しよった。;
   } else if (oldState.channel && !newState.channel) {
-    text = `${oldState.member.displayName}が消滅した。`;
+    text = ${oldState.member.displayName}が消滅した。;
   }
 
   if (text) {
@@ -283,5 +283,10 @@ const app = express();
 
 app.get('/', (req, res) => {
   res.send('Bot is running');
-})
-  
+});
+
+app.listen(3000, () => {
+  console.log(Server is running at: https://ikiriBOT.up.railway.app:${3000});
+});
+
+console.log('BOT_TOKEN:', process.env.BOT_TOKEN ? '[OK]' : '[NOT FOUND]');
