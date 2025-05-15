@@ -235,11 +235,16 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
   let text = null;
+  // 誰かがVCに入った
   if (!oldState.channel && newState.channel) {
-    const correctedName = correctNamePronunciation(newState.member.displayName, guildId);
+    const member = newState.member || newState.guild.members.cache.get(newState.id);
+    const correctedName = correctNamePronunciation(member?.displayName || member?.user.username, guildId);
     text = `${correctedName}が侵入しよった。`;
+
+  // 誰かがVCから出た
   } else if (oldState.channel && !newState.channel) {
-    const correctedName = correctNamePronunciation(oldState.member.displayName, guildId);
+    const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
+    const correctedName = correctNamePronunciation(member?.displayName || member?.user.username, guildId);
     text = `${correctedName}が消滅した。`;
   }
 
