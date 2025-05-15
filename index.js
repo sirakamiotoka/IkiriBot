@@ -21,6 +21,13 @@ let voiceConnections = {}; // サーバーごとのvoiceConnection
 const audioQueue = {};  // サーバーごとのaudioQueue
 let isPlaying = {}; // サーバーごとの再生状態
 
+// 誤読される名前のマッピング
+let nameMapping = {
+  '白神': 'しらかみ',  // 正しい読み方に変換
+  '白神雪': 'しらかみゆき',  // 追加した誤読名のマッピング
+  // 他にも誤読される名前をここで追加可能
+};
+
 // テキストのサニタイズ
 function sanitizeText(text) {
   return text
@@ -77,7 +84,19 @@ async function playNextInQueue(guildId) {
   }
 }
 
-// Bot起動時
+// 名前を変換する関数（部分一致も対応）
+function correctNamePronunciation(name) {
+  // 名前全体に対して、部分一致する誤読を修正
+  for (const [incorrectName, correctReading] of Object.entries(nameMapping)) {
+    // 部分一致した場合のみ変換
+    if (name.includes(incorrectName)) {
+      name = name.replace(incorrectName, correctReading);
+    }
+  }
+  return name;
+}
+
+// Botの起動時
 client.once(Events.ClientReady, c => {
   console.log(`(${c.user.tag}) が起動しました！`);
 });
@@ -89,6 +108,7 @@ client.on(Events.MessageCreate, async message => {
   const content = message.content;
   const guildId = message.guild.id;
 
+  // 殺処分コマンド
   if (content === '/ik.kill') {
     if (voiceConnections[guildId]) {
       voiceConnections[guildId].destroy();
@@ -101,6 +121,7 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
 
+  // VC凸コマンド
   if (content === '/ik.join') {
     if (voiceConnections[guildId]) {
       message.reply('もう入ってるやんｗ目ぇついてますか？ｗｗｗ');
@@ -121,11 +142,14 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
 
+  // 命乞い
   if (content === '/ik.help') {
     message.reply('教えませーんwざまぁww少しは自分でなんとかしたら？w');
     return;
   }
 
+  // --無意味なおまけ--
+  //しばく
   if (content === '/ik.w') {
     message.reply('何わろとんねん死んでくれ');
     return;
@@ -138,6 +162,23 @@ client.on(Events.MessageCreate, async message => {
 
   if (content === '/ik.tntn') {
     message.reply('こなもんのヤり抜くっ!!');
+    return;
+  }
+
+  // 名前追加コマンド /ik.addword 名前 正しい読み方
+  if (content.startsWith('/ik.addword')) {
+    const args = content.split(' ').slice(1);
+    if (args.length === 2) {
+      const [incorrectName, correctReading] = args;
+      if (nameMapping[incorrectName]) {
+        message.reply(`${incorrectName} はすでに登録されとるわボケ。`);
+      } else {
+        nameMapping[incorrectName] = correctReading;
+        message.reply(`新しいの登録してやったぞ、だるいわ: ${incorrectName} → ${correctReading}`);
+      }
+    } else {
+      message.reply('正しい形式でコマンドを入力してください。例: /ik.addword 白神 しらかみ');
+    }
     return;
   }
 
@@ -162,9 +203,11 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
   let text = null;
   if (!oldState.channel && newState.channel) {
-    text = `${newState.member.displayName}が侵入しよった。`;
+    const correctedName = correctNamePronunciation(newState.member.displayName);
+    text = `${correctedName}が侵入しよった。`;
   } else if (oldState.channel && !newState.channel) {
-    text = `${oldState.member.displayName}が消滅した。`;
+    const correctedName = correctNamePronunciation(oldState.member.displayName);
+    text = `${correctedName}が消滅した。`;
   }
 
   if (text) {
