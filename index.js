@@ -176,10 +176,10 @@ client.on(Events.MessageCreate, async message => {
         message.reply(`${incorrectName} はすでに登録されとるわボケ。`);
       } else {
         nameMappings[guildId][incorrectName] = correctReading;
-        message.reply(`新しいの登録してやったぞ、だるいわ: ${incorrectName} → ${correctReading}`);
+        message.reply(`新しいの登録してやったぞ、ほんまだるいわ: ${incorrectName} → ${correctReading}`);
       }
     } else {
-      message.reply('正しい形式でコマンドを入力してください。例: /ik.addword 白神 しらかみ');
+      message.reply('正しい形のコマンドすら入力できないんか？ｗ　お手本: /ik.addword 白神 しらかみ');
     }
     return;
   }
@@ -191,12 +191,12 @@ client.on(Events.MessageCreate, async message => {
       const [incorrectName] = args;
       if (nameMappings[guildId][incorrectName]) {
         delete nameMappings[guildId][incorrectName];
-        message.reply(`${incorrectName} を削除したぞ、だるいわ。`);
+        message.reply(`${incorrectName} を削除してやったぞｗ感謝しろｗｗ`);
       } else {
-        message.reply(`${incorrectName} は登録されてないぞ。`);
+        message.reply(`${incorrectName} が登録されてないやんけ。いい加減にしろよ`);
       }
     } else {
-      message.reply('正しい形式でコマンドを入力してください。例: /ik.removeword 白神');
+      message.reply('正しい形のコマンドすら入力できないんか？ｗ　お手本: /ik.removeword 白神');
     }
     return;
   }
@@ -205,12 +205,12 @@ client.on(Events.MessageCreate, async message => {
   if (content === '/ik.wordlist') {
     const mappings = nameMappings[guildId];
     if (Object.keys(mappings).length === 0) {
-      message.reply('まだ誤読リストに登録されている名前はないぞ。');
+      message.reply('誤読リストに登録されてる単語ないやんけ。ふざけんな。');
     } else {
       const list = Object.entries(mappings)
         .map(([incorrectName, correctReading]) => `${incorrectName} → ${correctReading}`)
         .join('\n');
-      message.reply(`誤読リスト:\n${list}`);
+      message.reply(`単語リスト:\n${list}`);
     }
     return;
   }
