@@ -140,7 +140,7 @@ client.on(Events.MessageCreate, async message => {
       adapterCreator: message.guild.voiceAdapterCreator,
     });
     activeChannels[guildId] = message.channel.id;
-    message.reply('入った。だる。');
+    message.reply('入りましたわ。だる。');
     return;
   }
 
@@ -191,7 +191,7 @@ client.on(Events.MessageCreate, async message => {
       const [incorrectName] = args;
       if (nameMappings[guildId][incorrectName]) {
         delete nameMappings[guildId][incorrectName];
-        message.reply(`${incorrectName} を削除してやりましたわｗ感謝しなさいｗｗ`);
+        message.reply(`${incorrectName} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
       } else {
         message.reply(`${incorrectName} が登録されてないですわね。いい加減にしてくださいませ`);
       }
@@ -205,7 +205,7 @@ client.on(Events.MessageCreate, async message => {
   if (content === '/ik.wordlist') {
     const mappings = nameMappings[guildId];
     if (Object.keys(mappings).length === 0) {
-      message.reply('誤読リストに登録されてる単語ないですわね。ふざけんな。');
+      message.reply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
     } else {
       const list = Object.entries(mappings)
         .map(([incorrectName, correctReading]) => `${incorrectName} → ${correctReading}`)
