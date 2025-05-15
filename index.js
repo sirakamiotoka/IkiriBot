@@ -95,7 +95,7 @@ function correctNamePronunciation(name, guildId) {
 
 // Botの起動時
 client.once(Events.ClientReady, c => {
-  console.log(`(${c.user.tag}) が起動しました！`);
+  console.log(`(${c.user.tag}) が起動しましたわ！`);
 });
 
 // メッセージ処理
@@ -116,9 +116,9 @@ client.on(Events.MessageCreate, async message => {
       voiceConnections[guildId].destroy();
       voiceConnections[guildId] = null;
       activeChannels[guildId] = null;
-      message.reply('は？何してくれてんの？');
+      message.reply('は？何してくれやがりますの？');
     } else {
-      message.reply('どこにも繋いでないねwざんねん！w');
+      message.reply('どこにも繋いでないですわねwざんねん！w');
     }
     return;
   }
@@ -126,12 +126,12 @@ client.on(Events.MessageCreate, async message => {
   // VC凸コマンド
   if (content === '/ik.join') {
     if (voiceConnections[guildId]) {
-      message.reply('もう入ってるやんｗ目ぇついてますか？ｗｗｗ');
+      message.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
       return;
     }
 
     if (!message.member.voice.channel) {
-      message.reply('先にお前がVC入ってから言えや。もしかしてアホですか？');
+      message.reply('先にお前がVC入ってから言いなさいですわ。もしかしてアホでございやがりますこと？');
       return;
     }
     voiceConnections[guildId] = joinVoiceChannel({
@@ -146,14 +146,14 @@ client.on(Events.MessageCreate, async message => {
 
   // 命乞い
   if (content === '/ik.help') {
-    message.reply('教えませーんwざまぁww少しは自分でなんとかしたら？w');
+    message.reply('いやですわwざまぁww少しは自分でなんとかしたらどうですの？w');
     return;
   }
 
   // --無意味なおまけ--
   //しばく
   if (content === '/ik.w') {
-    message.reply('何わろとんねん死んでくれ');
+    message.reply('何わろとんねんくたばってくださいませ');
     return;
   }
 
@@ -173,13 +173,13 @@ client.on(Events.MessageCreate, async message => {
     if (args.length === 2) {
       const [incorrectName, correctReading] = args;
       if (nameMappings[guildId][incorrectName]) {
-        message.reply(`${incorrectName} はすでに登録されとるわボケ。`);
+        message.reply(`${incorrectName} はすでに登録されてますわボケ。`);
       } else {
         nameMappings[guildId][incorrectName] = correctReading;
-        message.reply(`新しいの登録してやったぞ、ほんまだるいわ: ${incorrectName} → ${correctReading}`);
+        message.reply(`新しいの登録してやりました、ほんまだるいですわ: ${incorrectName} → ${correctReading}`);
       }
     } else {
-      message.reply('正しい形のコマンドすら入力できないんか？ｗ　お手本: /ik.addword 白神 しらかみ');
+      message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik.addword 白神 しらかみ');
     }
     return;
   }
@@ -191,12 +191,12 @@ client.on(Events.MessageCreate, async message => {
       const [incorrectName] = args;
       if (nameMappings[guildId][incorrectName]) {
         delete nameMappings[guildId][incorrectName];
-        message.reply(`${incorrectName} を削除してやったぞｗ感謝しろｗｗ`);
+        message.reply(`${incorrectName} を削除してやりましたわｗ感謝しなさいｗｗ`);
       } else {
-        message.reply(`${incorrectName} が登録されてないやんけ。いい加減にしろよ`);
+        message.reply(`${incorrectName} が登録されてないですわね。いい加減にしてくださいませ`);
       }
     } else {
-      message.reply('正しい形のコマンドすら入力できないんか？ｗ　お手本: /ik.removeword 白神');
+      message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik.removeword 白神');
     }
     return;
   }
@@ -205,7 +205,7 @@ client.on(Events.MessageCreate, async message => {
   if (content === '/ik.wordlist') {
     const mappings = nameMappings[guildId];
     if (Object.keys(mappings).length === 0) {
-      message.reply('誤読リストに登録されてる単語ないやんけ。ふざけんな。');
+      message.reply('誤読リストに登録されてる単語ないですわね。ふざけんな。');
     } else {
       const list = Object.entries(mappings)
         .map(([incorrectName, correctReading]) => `${incorrectName} → ${correctReading}`)
@@ -239,13 +239,13 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (!oldState.channel && newState.channel) {
     const member = newState.member || newState.guild.members.cache.get(newState.id);
     const correctedName = correctNamePronunciation(member?.displayName || member?.user.username, guildId);
-    text = `${correctedName}が侵入しよった。`;
+    text = `${correctedName}が侵入しましたわね。`;
 
   // 誰かがVCから出た
   } else if (oldState.channel && !newState.channel) {
     const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
     const correctedName = correctNamePronunciation(member?.displayName || member?.user.username, guildId);
-    text = `${correctedName}が消滅した。`;
+    text = `${correctedName}がくたばりました。`;
   }
 
   if (text) {
