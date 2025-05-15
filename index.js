@@ -216,18 +216,22 @@ client.on(Events.MessageCreate, async message => {
   }
 
   // 通常メッセージ読み上げ
-  if (voiceConnections[guildId] && message.channel.id === activeChannels[guildId] && !content.startsWith('/')) {
-    let text = sanitizeText(content);
-    if (text.length === 0) return;
-    text = shortenText(text);
-    const uniqueId = uuidv4();
-    const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
-    
-    if (!audioQueue[guildId]) audioQueue[guildId] = [];
-    audioQueue[guildId].push({ text, file: filePath });
-    playNextInQueue(guildId);
-  }
-});
+if (voiceConnections[guildId] && message.channel.id === activeChannels[guildId] && !content.startsWith('/')) {
+  let text = sanitizeText(content);
+  if (text.length === 0) return;
+
+  // 誤読修正の適用
+  text = correctNamePronunciation(text, guildId);
+
+  text = shortenText(text);
+  const uniqueId = uuidv4();
+  const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
+
+  if (!audioQueue[guildId]) audioQueue[guildId] = [];
+  audioQueue[guildId].push({ text, file: filePath });
+  playNextInQueue(guildId);
+}
+
 
 // VCの出入りを読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
