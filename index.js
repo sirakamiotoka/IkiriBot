@@ -21,12 +21,8 @@ let voiceConnections = {}; // サーバーごとのvoiceConnection
 const audioQueue = {};  // サーバーごとのaudioQueue
 let isPlaying = {}; // サーバーごとの再生状態
 
-// 誤読される名前のマッピング
-let nameMapping = {
-  '白神': 'しらかみ',  // 正しい読み方に変換
-  '白神雪': 'しらかみゆき',  // 追加した誤読名のマッピング
-  // 他にも誤読される名前をここで追加可能
-};
+// サーバーごとの誤読される名前のマッピング
+let nameMappings = {}; // key: guildId, value: nameMapping
 
 // テキストのサニタイズ
 function sanitizeText(text) {
@@ -85,7 +81,8 @@ async function playNextInQueue(guildId) {
 }
 
 // 名前を変換する関数（部分一致も対応）
-function correctNamePronunciation(name) {
+function correctNamePronunciation(name, guildId) {
+  const nameMapping = nameMappings[guildId] || {};
   // 名前全体に対して、部分一致する誤読を修正
   for (const [incorrectName, correctReading] of Object.entries(nameMapping)) {
     // 部分一致した場合のみ変換
@@ -107,6 +104,11 @@ client.on(Events.MessageCreate, async message => {
 
   const content = message.content;
   const guildId = message.guild.id;
+
+  // 初期化：サーバーの誤読名マッピングを初期化
+  if (!nameMappings[guildId]) {
+    nameMappings[guildId] = {};
+  }
 
   // 殺処分コマンド
   if (content === '/ik.kill') {
@@ -170,14 +172,45 @@ client.on(Events.MessageCreate, async message => {
     const args = content.split(' ').slice(1);
     if (args.length === 2) {
       const [incorrectName, correctReading] = args;
-      if (nameMapping[incorrectName]) {
+      if (nameMappings[guildId][incorrectName]) {
         message.reply(`${incorrectName} はすでに登録されとるわボケ。`);
       } else {
-        nameMapping[incorrectName] = correctReading;
+        nameMappings[guildId][incorrectName] = correctReading;
         message.reply(`新しいの登録してやったぞ、だるいわ: ${incorrectName} → ${correctReading}`);
       }
     } else {
       message.reply('正しい形式でコマンドを入力してください。例: /ik.addword 白神 しらかみ');
+    }
+    return;
+  }
+
+  // 名前削除コマンド /ik.removeword 名前
+  if (content.startsWith('/ik.removeword')) {
+    const args = content.split(' ').slice(1);
+    if (args.length === 1) {
+      const [incorrectName] = args;
+      if (nameMappings[guildId][incorrectName]) {
+        delete nameMappings[guildId][incorrectName];
+        message.reply(`${incorrectName} を削除したぞ、だるいわ。`);
+      } else {
+        message.reply(`${incorrectName} は登録されてないぞ。`);
+      }
+    } else {
+      message.reply('正しい形式でコマンドを入力してください。例: /ik.removeword 白神');
+    }
+    return;
+  }
+
+  // 誤読リスト表示コマンド /ik.wordlist
+  if (content === '/ik.wordlist') {
+    const mappings = nameMappings[guildId];
+    if (Object.keys(mappings).length === 0) {
+      message.reply('まだ誤読リストに登録されている名前はないぞ。');
+    } else {
+      const list = Object.entries(mappings)
+        .map(([incorrectName, correctReading]) => `${incorrectName} → ${correctReading}`)
+        .join('\n');
+      message.reply(`誤読リスト:\n${list}`);
     }
     return;
   }
@@ -203,10 +236,10 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
   let text = null;
   if (!oldState.channel && newState.channel) {
-    const correctedName = correctNamePronunciation(newState.member.displayName);
+    const correctedName = correctNamePronunciation(newState.member.displayName, guildId);
     text = `${correctedName}が侵入しよった。`;
   } else if (oldState.channel && !newState.channel) {
-    const correctedName = correctNamePronunciation(oldState.member.displayName);
+    const correctedName = correctNamePronunciation(oldState.member.displayName, guildId);
     text = `${correctedName}が消滅した。`;
   }
 
