@@ -231,7 +231,7 @@ if (voiceConnections[guildId] && message.channel.id === activeChannels[guildId] 
   audioQueue[guildId].push({ text, file: filePath });
   playNextInQueue(guildId);
 }
-
+});
 
 // VCの出入りを読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
