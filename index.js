@@ -54,17 +54,33 @@ async function speakText(text, lang = 'ja', filepath) {
 
 // 音声再生関数をサーバーごとに管理
 async function playNextInQueue(guildId) {
-  if (isPlaying[guildId] || audioQueue[guildId].length === 0 || !voiceConnections[guildId]) return;
+  if (
+    isPlaying[guildId] ||
+    !audioQueue[guildId] ||
+    audioQueue[guildId].length === 0 ||
+    !voiceConnections[guildId] ||
+    voiceConnections[guildId].state.status === 'destroyed'
+  ) {
+    return;
+  }
 
   const { text, file } = audioQueue[guildId].shift();
   isPlaying[guildId] = true;
 
   try {
     await speakText(text, 'ja', file);
+
     const player = createAudioPlayer();
     const resource = createAudioResource(file);
     player.play(resource);
-    voiceConnections[guildId].subscribe(player);
+
+    if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
+      voiceConnections[guildId].subscribe(player);
+    } else {
+      console.warn(` サーバー ${guildId} のVoiceConnectionがもうデストロイ！されています`);
+      isPlaying[guildId] = false;
+      return;
+    }
 
     player.on(AudioPlayerStatus.Idle, () => {
       fs.unlink(file, (err) => {
@@ -72,6 +88,12 @@ async function playNextInQueue(guildId) {
       });
       isPlaying[guildId] = false;
       playNextInQueue(guildId); // 次へ
+    });
+
+    player.on('error', (error) => {
+      console.error(`AudioPlayer エラー: ${error.message}`);
+      isPlaying[guildId] = false;
+      playNextInQueue(guildId); // スキップ
     });
   } catch (err) {
     console.error('読み上げエラー:', err);
@@ -112,7 +134,7 @@ client.on(Events.MessageCreate, async message => {
 
   // 殺処分コマンド
   if (content === '/ik.kill') {
-    if (voiceConnections[guildId]) {
+    if (voiceConnections[guildId]&& voiceConnection[guildId].state.status !== 'destroyed') {
       voiceConnections[guildId].destroy();
       voiceConnections[guildId] = null;
       activeChannels[guildId] = null;
@@ -149,7 +171,11 @@ client.on(Events.MessageCreate, async message => {
     message.reply('いやですわwざまぁww少しは自分でなんとかしたらどうですの？w');
     return;
   }
-
+  //デバッグ用
+ if (content === '/ik.debugcheck') {
+    message.reply(voiceConnection[guildId].state.status);
+    return;
+  }
   // --無意味なおまけ--
   //しばく
   if (content === '/ik.w') {
@@ -162,10 +188,7 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
 
-  if (content === '/ik.tntn') {
-    message.reply('こなもんのヤり抜くっ!!');
-    return;
-  }
+ 
 
   // 名前追加コマンド /ik.addword 名前 正しい読み方
   if (content.startsWith('/ik.addword')) {
