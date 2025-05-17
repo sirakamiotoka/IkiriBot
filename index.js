@@ -175,7 +175,7 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
   //デバッグ用
- if (content === '/ik.debugcheck') {
+ if (content === '/ik.stcheck') {
    if (someObject && someObject.state) {
    message.reply('今の状態は${voiceConnections[guildId].state.status}ですわ');
   } else {
