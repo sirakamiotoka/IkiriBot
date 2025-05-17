@@ -136,7 +136,7 @@ client.on(Events.MessageCreate, async message => {
 
   // 殺処分コマンド
   if (content === '/ik.kill') {
-    if (voiceConnections[guildId]&& voiceConnection[guildId].state.status !== 'destroyed') {
+    if (voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed') {
       voiceConnections[guildId].destroy();
       voiceConnections[guildId] = null;
       activeChannels[guildId] = null;
@@ -175,7 +175,7 @@ client.on(Events.MessageCreate, async message => {
   }
   //デバッグ用
  if (content === '/ik.debugcheck') {
-    message.reply(voiceConnection[guildId].state.status);
+    message.reply(voiceConnections[guildId].state.status);
     return;
   }
   // --無意味なおまけ--
