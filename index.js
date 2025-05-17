@@ -28,6 +28,7 @@ let nameMappings = {}; // key: guildId, value: nameMapping
 function sanitizeText(text) {
   return text
     .replace(/<a?:\w+:\d+>/g, '') // カスタム絵文字除去
+    .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる') // URLを"ゆーあーるえる"に置換
     .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n]/gu, '') // 記号など除去
     .trim();
 }
@@ -264,16 +265,20 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
   let text = null;
-  // 誰かがVCに入った
+   // 誰かがVCに入った
   if (!oldState.channel && newState.channel) {
     const member = newState.member || newState.guild.members.cache.get(newState.id);
-    const correctedName = correctNamePronunciation(member?.displayName || member?.user.username, guildId);
+    const correctedName = correctNamePronunciation(
+      member?.nickname || member?.displayName, guildId
+    );
     text = `${correctedName}が侵入しましたわね。`;
 
   // 誰かがVCから出た
   } else if (oldState.channel && !newState.channel) {
     const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
-    const correctedName = correctNamePronunciation(member?.displayName || member?.user.username, guildId);
+    const correctedName = correctNamePronunciation(
+      member?.nickname || member?.displayName, guildId
+    );
     text = `${correctedName}がくたばりました。`;
   }
 
