@@ -176,7 +176,11 @@ client.on(Events.MessageCreate, async message => {
   }
   //デバッグ用
  if (content === '/ik.debugcheck') {
-    message.reply(voiceConnections[guildId].state.status);
+   if (someObject && someObject.state) {
+   message.reply('今の状態は${voiceConnections[guildId].state.status}ですわ');
+  } else {
+     message.reply('状態確認を拒否しますわ');
+   }
     return;
   }
   // --無意味なおまけ--
