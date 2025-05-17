@@ -130,6 +130,8 @@ client.on(Events.MessageCreate, async message => {
   // 初期化：サーバーの誤読名マッピングを初期化
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
+    // デフォルト：白神 → しらかみ
+    nameMappings[guildId]['白神'] = 'しらかみ';
   }
 
   // 殺処分コマンド
