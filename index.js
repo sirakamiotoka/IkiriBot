@@ -79,8 +79,6 @@ async function playNextInQueue(guildId) {
       voiceConnections[guildId].subscribe(player);
     } else {
       console.warn(` サーバー ${guildId} のVoiceConnectionがもうデストロイ！されています`);
-      
-      return;
     }
 
     player.on(AudioPlayerStatus.Idle, () => {
