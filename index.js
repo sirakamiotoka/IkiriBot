@@ -135,7 +135,7 @@ client.on(Events.MessageCreate, async message => {
 
   // 殺処分コマンド
   if (content === '/ik.kill') {
-    if (voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed') {
+    if (voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed'&& activeChannels[guildId] !== null) {
       voiceConnections[guildId].destroy();
       voiceConnections[guildId] = null;
       activeChannels[guildId] = null;
@@ -175,7 +175,8 @@ client.on(Events.MessageCreate, async message => {
   //デバッグ用
  if (content === '/ik.stcheck') {
    if (voiceConnections[guildId] && voiceConnections[guildId].state) {
-   message.reply('今の状態は '+voiceConnections[guildId].state.status+' ですわ');
+   message.reply('voiceConnectionsの今の状態は '+voiceConnections[guildId].state.status+' ですわ');
+     message.reply('activeChannelsの今の状態は '+activeChannels[guildId]+' ですわ');
   } else {
      message.reply('状態確認を拒否しますわ');
    }
@@ -293,16 +294,15 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (channel) {
     const nonBotMembers = channel.members.filter(member => !member.user.bot);
     if (nonBotMembers.size === 0) {
-      if(voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed'){
+      if(voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null){
         voiceConnections[guildId].destroy();
         voiceConnections[guildId] = null;
-  
+        
         const textChannel = client.channels.cache.get(activeChannels[guildId]);
         if (textChannel && textChannel.isTextBased()) {
           textChannel.send('誰もVCにいなくなったので自害します');
         }
-      
-      activeChannels[guildId] = null;
+        activeChannels[guildId] = null;
       }
     }
   }
