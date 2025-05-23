@@ -278,14 +278,17 @@ if (voiceConnections[guildId] && message.channel.id === activeChannels[guildId] 
 // VCの出入りを読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
   const guildId = newState.guild.id;
-  if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
-
-  
-  
   const botId = client.user.id;
-  if (oldState.id === botId && oldState.channelId && !newState.channelId) {
-    leaveVC(guildId, '権限者の手によって木端微塵にされましたわ...');
-  }
+
+// BotがVCから追い出された（強制切断含む）
+if (oldState.id === botId && oldState.channelId && !newState.channelId) {
+  leaveVC(guildId, '権限者の手によって木端微塵にされましたわ...');
+  return; // BotのVC退出時の処理なので、他の処理をスキップ
+}
+
+// 以下は他ユーザーに関する処理（Bot自身でなければ実行）
+if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
+  
   let text = null;
   // 誰かがVCに入った
   if (!oldState.channel && newState.channel) {
