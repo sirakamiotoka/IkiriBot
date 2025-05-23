@@ -113,25 +113,6 @@ function correctNamePronunciation(name, guildId) {
   }
   return name;
 }
-
-// Botの起動時
-client.once(Events.ClientReady, c => {
-  console.log(`(${c.user.tag}) が起動しましたわ！`);
-});
-
-// メッセージ処理
-client.on(Events.MessageCreate, async message => {
-  if (message.author.bot) return;
-
-  const content = message.content;
-  const guildId = message.guild.id;
-
-  // 初期化：サーバーの誤読名マッピングを初期化
-  if (!nameMappings[guildId]) {
-    nameMappings[guildId] = {};
-    // デフォルト：白神 → しらかみ
-    nameMappings[guildId]['白神'] = 'しらかみ';
-  }
 // -- VC切断処理を関数化 --
 function leaveVC(guildId, reasonText = '切断されましたわ。') {
   if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
@@ -151,6 +132,26 @@ function leaveVC(guildId, reasonText = '切断されましたわ。') {
   isPlaying[guildId] = false;
   audioQueue[guildId] = [];
 }
+
+// Botの起動時
+client.once(Events.ClientReady, c => {
+  console.log(`(${c.user.tag}) が起動しましたわ！`);
+});
+
+// メッセージ処理
+client.on(Events.MessageCreate, async message => {
+  if (message.author.bot) return;
+
+  const content = message.content;
+  const guildId = message.guild.id;
+
+  // 初期化：サーバーの誤読名マッピングを初期化
+  if (!nameMappings[guildId]) {
+    nameMappings[guildId] = {};
+    // デフォルト：白神 → しらかみ
+    nameMappings[guildId]['白神'] = 'しらかみ';
+  }
+
   // 殺処分コマンド
   if (content === '/ik.kill') {
   if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
@@ -279,12 +280,13 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   const guildId = newState.guild.id;
   if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
-  let text = null;
+  
   
   const botId = client.user.id;
   if (oldState.id === botId && oldState.channelId && !newState.channelId) {
     leaveVC(guildId, '権限者の手によって木端微塵にされましたわ...');
   }
+  let text = null;
   // 誰かがVCに入った
   if (!oldState.channel && newState.channel) {
     const member = newState.member || newState.guild.members.cache.get(newState.id);
