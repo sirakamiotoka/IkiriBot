@@ -132,19 +132,34 @@ client.on(Events.MessageCreate, async message => {
     // デフォルト：白神 → しらかみ
     nameMappings[guildId]['白神'] = 'しらかみ';
   }
+// -- VC切断処理を関数化 --
+function leaveVC(guildId, reasonText = '切断されましたわ。') {
+  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
+    voiceConnections[guildId].destroy();
+    voiceConnections[guildId] = null;
+  }
 
+  if (activeChannels[guildId]) {
+    const textChannel = client.channels.cache.get(activeChannels[guildId]);
+    if (textChannel && textChannel.isTextBased()) {
+      textChannel.send(reasonText);
+    }
+    activeChannels[guildId] = null;
+  }
+
+  // 再生キューなどの状態もリセット（必要に応じて）
+  isPlaying[guildId] = false;
+  audioQueue[guildId] = [];
+}
   // 殺処分コマンド
   if (content === '/ik.kill') {
-    if (voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed'&& activeChannels[guildId] !== null) {
-      voiceConnections[guildId].destroy();
-      voiceConnections[guildId] = null;
-      activeChannels[guildId] = null;
-      message.reply('は？何してくれやがりますの？');
-    } else {
-      message.reply('どこにも繋いでないですわねwざんねん！w');
-    }
-    return;
+  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
+    leaveVC(guildId, 'は？何してくれやがりますの？');
+  } else {
+    message.reply('どこにも繋いでないですわねwざんねん！w');
   }
+  return;
+}
 
   // VC凸コマンド
   if (content === '/ik.join') {
@@ -265,7 +280,11 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
   let text = null;
-
+  
+  const botId = client.user.id;
+  if (oldState.id === botId && oldState.channelId && !newState.channelId) {
+    leaveVC(guildId, '権限者の手によって木端微塵にされましたわ...');
+  }
   // 誰かがVCに入った
   if (!oldState.channel && newState.channel) {
     const member = newState.member || newState.guild.members.cache.get(newState.id);
