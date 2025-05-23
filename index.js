@@ -188,10 +188,7 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
 
-  if (content === '/ik.konamon') {
-    message.reply('ちんちん交通整備魂');
-    return;
-  }
+
 
  
 
@@ -296,15 +293,17 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   if (channel) {
     const nonBotMembers = channel.members.filter(member => !member.user.bot);
     if (nonBotMembers.size === 0) {
-      voiceConnections[guildId].destroy();
-      voiceConnections[guildId] = null;
-
-      const textChannel = client.channels.cache.get(activeChannels[guildId]);
-      if (textChannel && textChannel.isTextBased()) {
-        textChannel.send('誰もVCにいなくなったので自害します');
-      }
-
+      if(voiceConnections[guildId]&& voiceConnections[guildId].state.status !== 'destroyed'){
+        voiceConnections[guildId].destroy();
+        voiceConnections[guildId] = null;
+  
+        const textChannel = client.channels.cache.get(activeChannels[guildId]);
+        if (textChannel && textChannel.isTextBased()) {
+          textChannel.send('誰もVCにいなくなったので自害します');
+        }
+      
       activeChannels[guildId] = null;
+      }
     }
   }
 });
