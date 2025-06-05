@@ -189,20 +189,19 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
   //天気 
-  if (content === '/ik.weather') {
+if (content === '/ik.weather') {
   try {
     const weatherText = await fetchNationwideWeather();
-
     const messageChunks = weatherText.match(/[\s\S]{1,1900}/g);
     for (const chunk of messageChunks) {
-      await message.reply('```\n' + chunk + '\n```'); // コードブロックで見やすく
+      await message.reply('```\n' + chunk + '\n```');
     }
   } catch (err) {
     console.error('天気取得エラー:', err);
-    message.reply('天気予報の取得に失敗しましたわ。');
+    message.reply('天気予報の取得に失敗しましたわ。ごみ！');
   }
   return;
-　}
+}
   
   //デバッグ用
  if (content === '/ik.stcheck') {
