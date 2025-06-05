@@ -162,6 +162,22 @@ client.on(Events.MessageCreate, async message => {
   return;
 }
 
+  //絶対命令
+  if (content === '/ik.absolutekill') {
+  const allowedUserId = '1289133629972418613'; 
+  if (message.author.id !== allowedUserId) {
+    message.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
+    return;
+  }
+
+  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
+    leaveVC(guildId, 'は？強制切断されましたわ。');
+  } else {
+    message.reply('今はどこにも繋がっていませんわ。');
+  }
+  return;
+}
+
   // VC凸コマンド
   if (content === '/ik.join') {
     if (voiceConnections[guildId]) {
