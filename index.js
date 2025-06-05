@@ -205,7 +205,7 @@ client.on(Events.MessageCreate, async message => {
     return;
   }
   
-  const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
+ // const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
   
   //天気 
 //if (content.startsWith('/ik.weather')) {
