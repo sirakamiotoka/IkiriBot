@@ -208,28 +208,28 @@ client.on(Events.MessageCreate, async message => {
   const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
   
   //天気 
-if (content.startsWith('/ik.weather')) {
-  const args = content.split(' ').slice(1);
-  if (args.length === 0) {
-    message.reply('正しいコマンドを入力してくださいましｗｗｗ 例: `/ik.weather 東京`');
-    return;
-  }
+//if (content.startsWith('/ik.weather')) {
+//  const args = content.split(' ').slice(1);
+//  if (args.length === 0) {
+//    message.reply('正しいコマンドを入力してくださいましｗｗｗ 例: `/ik.weather 東京`');
+//    return;
+//  }
 
-  const query = args.join('');
-  try {
-    const weatherText = await fetchWeatherByPrefectureName(query);
-　　message.reply('仕方ないので教えて差し上げますわｗｗ');
-    // Discordの文字数制限
-    const chunks = weatherText.match(/[\s\S]{1,1900}/g);
-    for (const chunk of chunks) {
-      await message.reply('```\n' + chunk + '\n```');
-    }
-  } catch (err) {
-    message.reply(err.message);
-  }
-
-  return;
-}
+//  const query = args.join('');
+//  try {
+//    const weatherText = await fetchWeatherByPrefectureName(query);
+//　　message.reply('仕方ないので教えて差し上げますわｗｗ');
+//    // Discordの文字数制限
+//    const chunks = weatherText.match(/[\s\S]{1,1900}/g);
+//    for (const chunk of chunks) {
+//      await message.reply('```\n' + chunk + '\n```');
+//    }
+//  } catch (err) {
+//    message.reply(err.message);
+//  }
+//
+//  return;
+//}
   
   //デバッグ用
  if (content === '/ik.stcheck') {
