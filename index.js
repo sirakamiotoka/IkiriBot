@@ -188,18 +188,30 @@ client.on(Events.MessageCreate, async message => {
     message.reply('いやですわwざまぁww少しは自分でなんとかしたらどうですの？w');
     return;
   }
+  
+  const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
+  
   //天気 
-if (content === '/ik.weather') {
+if (content.startsWith('/ik.weather')) {
+  const args = content.split(' ').slice(1);
+  if (args.length === 0) {
+    message.reply('正しいコマンドを入力してくださいましｗｗｗ 例: `/ik.weather 東京`');
+    return;
+  }
+
+  const query = args.join('');
   try {
-    const weatherText = await fetchNationwideWeather();
-    const messageChunks = weatherText.match(/[\s\S]{1,1900}/g);
-    for (const chunk of messageChunks) {
+    const weatherText = await fetchWeatherByPrefectureName(query);
+
+    // Discordの文字数制限対応
+    const chunks = weatherText.match(/[\s\S]{1,1900}/g);
+    for (const chunk of chunks) {
       await message.reply('```\n' + chunk + '\n```');
     }
   } catch (err) {
-    console.error('天気取得エラー:', err);
-    message.reply('天気予報の取得に失敗しましたわ。ごみ！');
+    message.reply(err.message);
   }
+
   return;
 }
   
