@@ -50,34 +50,31 @@ const prefectureCodes = {
   '沖縄県': '471000'
 };
 
-// 都道府県名に部分一致
 function searchAreaMatches(query) {
   return Object.entries(prefectureCodes)
     .filter(([name]) => name.includes(query))
     .map(([name, code]) => ({ name, code }));
 }
 
-// 市区名から逆引き検索（全都道府県をチェック）
 async function fetchWeatherByPrefectureName(query) {
   const results = [];
-
-  // 都道府県名にマッチするものがあれば使う
   let matches = searchAreaMatches(query);
 
-  // なければすべての都道府県を調べて市区名に一致するエリアを探す
+  // 都道府県名でマッチしなければ市区名とみなして全県探索
   if (matches.length === 0) {
-    // すべての都道府県を試す
     for (const [prefName, code] of Object.entries(prefectureCodes)) {
       try {
         const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`;
         const res = await axios.get(url);
-        const areaSeries = res.data[0].timeSeries[0];
-        const found = areaSeries.areas.find(a => a.area.name.includes(query));
-        if (found) {
-          matches.push({ name: prefName, code });
+        const areas = res.data[0].timeSeries[0].areas;
+
+        // area.name に query を含むものを探す
+        const matchedArea = areas.find(a => a.area.name.includes(query));
+        if (matchedArea) {
+          matches.push({ name: prefName, code, matchedAreaName: matchedArea.area.name });
         }
-      } catch (e) {
-        // 無視して次へ
+      } catch (_) {
+        continue;
       }
     }
 
@@ -86,24 +83,33 @@ async function fetchWeatherByPrefectureName(query) {
     }
   }
 
-  for (const { name, code } of matches) {
+  for (const { name, code, matchedAreaName } of matches) {
     try {
       const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`;
       const res = await axios.get(url);
       const forecastData = res.data[0];
       const areaSeries = forecastData.timeSeries[0];
-
       const selectedAreas = areaSeries.areas;
 
-      // 市区名で部分一致を優先
-      let selectedArea = selectedAreas.find(a => a.area.name.includes(query));
+      let selectedArea = null;
 
-      // なければ都道府県名で検索
-      if (!selectedArea) {
-        selectedArea = selectedAreas.find(a => a.area.name.includes(name.replace(/(都|道|府|県)/, '')));
+      // 事前に市区名で一致した area 名がわかっている場合
+      if (matchedAreaName) {
+        selectedArea = selectedAreas.find(a => a.area.name === matchedAreaName);
       }
 
-      // 条件の一致がないときの最終手段
+      // なければ query で部分一致検索（市区名）
+      if (!selectedArea) {
+        selectedArea = selectedAreas.find(a => a.area.name.includes(query));
+      }
+
+      // 都道府県名ベース
+      if (!selectedArea) {
+        const cleanedName = name.replace(/(都|道|府|県)/, '');
+        selectedArea = selectedAreas.find(a => a.area.name.includes(cleanedName));
+      }
+
+      // 最後の保険
       if (!selectedArea) {
         selectedArea = selectedAreas[0];
       }
