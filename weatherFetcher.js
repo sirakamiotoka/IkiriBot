@@ -50,18 +50,18 @@ const prefectureCodes = {
   '沖縄県': '471000'
 };
 
-// 部分一致で都道府県を検索
-function searchPrefectureMatches(query) {
+// 部分一致で都道府県または市区名を検索
+function searchAreaMatches(query) {
   return Object.entries(prefectureCodes)
     .filter(([name]) => name.includes(query))
     .map(([name, code]) => ({ name, code }));
 }
 
-// 天気取得
+// 天気取得（都道府県または市区名に対応）
 async function fetchWeatherByPrefectureName(prefectureQuery) {
-  const matches = searchPrefectureMatches(prefectureQuery);
+  const matches = searchAreaMatches(prefectureQuery);
   if (matches.length === 0) {
-    throw new Error('そんなデータないですわｗ');
+    throw new Error('地域が見つからねぇですわよｗ');
   }
 
   const results = [];
@@ -73,29 +73,24 @@ async function fetchWeatherByPrefectureName(prefectureQuery) {
       const forecastData = res.data[0];
       const areaSeries = forecastData.timeSeries[0];
 
-      // 都道府県名が一致してるものを優先
-      let selectedAreas = areaSeries.areas;
+      // 都道府県名が一致しているエリアを優先
+      let selectedArea = areaSeries.areas.find(a => a.area.name.includes(name));
 
-      // 地域名が含まれるならその地域を探す
-      const matchedArea = selectedAreas.find(a => a.area.name.includes(prefectureQuery));
-      
-      let areaToUse = matchedArea;
-
-      // なければ「県」や都道府県名が含まれてるエリアを使う
-      if (!areaToUse) {
-        areaToUse = selectedAreas.find(a => a.area.name.includes('県') || a.area.name.includes(name.replace('府', '').replace('県', '')));
+      // 市区名が一致しているエリアを探す
+      if (!selectedArea) {
+        selectedArea = areaSeries.areas.find(a => a.area.name.includes(prefectureQuery));
       }
 
-      // すべての条件にマッチしなかったとき
-      if (!areaToUse) {
-        areaToUse = selectedAreas[0];
+      // 一致するエリアが見つからない場合、最初のエリアを使用
+      if (!selectedArea) {
+        selectedArea = areaSeries.areas[0];
       }
 
-      const today = areaToUse.weathers[0];
-      const tomorrow = areaToUse.weathers[1];
-      results.push(`${areaToUse.area.name}の大体の天気\n　今日：${today}\n　明日：${tomorrow}`);
+      const today = selectedArea.weathers[0];
+      const tomorrow = selectedArea.weathers[1];
+      results.push(`${selectedArea.area.name}の天気は、\n　今日：${today}\n　明日：${tomorrow}`);
     } catch (err) {
-      results.push(`${name}：取得失敗。ふざけんなですわ`);
+      results.push(`${name}：取得失敗しましたわ！w。`);
     }
   }
 
