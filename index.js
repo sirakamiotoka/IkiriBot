@@ -222,7 +222,7 @@ if (content.startsWith('/ik.weather')) {
     // Discordの文字数制限
     const chunks = weatherText.match(/[\s\S]{1,1900}/g);
     for (const chunk of chunks) {
-      await message.reply(`仕方ないので教えて差し上げますわ\n${chunk}`);
+      await message.reply(`しゃーなし教えて差し上げますわｗ\n${chunk}`);
    //   await message.reply('```\n' + chunk + '\n```');
     }
   } catch (err) {
