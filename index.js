@@ -204,21 +204,21 @@ client.on(Events.MessageCreate, async message => {
     message.reply('いやですわwざまぁww少しは自分でなんとかしたらどうですの？w');
     return;
   }
-  
- // const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
-  
-  //天気 
+
+  //天気
+  const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
+   
 if (content.startsWith('/ik.weather')) {
   const args = content.split(' ').slice(1);
   if (args.length === 0) {
-    message.reply('正しいコマンドを入力してくださいましｗｗｗ 例: `/ik.weather 東京`');
+    message.reply('正しいコマンドを入力してくださいましｗ 例: `/ik.weather 東京`');
     return;
   }
 
   const query = args.join('');
   try {
     const weatherText = await fetchWeatherByPrefectureName(query);
-　　message.reply('仕方ないので教えて差し上げますわｗｗ');
+　　message.reply('仕方ないので教えて差し上げますわ');
     // Discordの文字数制限
     const chunks = weatherText.match(/[\s\S]{1,1900}/g);
     for (const chunk of chunks) {
