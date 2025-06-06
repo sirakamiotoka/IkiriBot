@@ -50,75 +50,40 @@ const prefectureCodes = {
   '沖縄県': '471000'
 };
 
-function searchAreaMatches(query) {
+// 部分一致で都道府県名を検索
+function searchPrefectureMatches(query) {
   return Object.entries(prefectureCodes)
     .filter(([name]) => name.includes(query))
     .map(([name, code]) => ({ name, code }));
 }
 
-async function fetchWeatherByPrefectureName(query) {
-  const results = [];
-  let matches = searchAreaMatches(query);
-
-  // 都道府県名でマッチしなければ市区名とみなして全県探索
+// 天気取得（都道府県名のみ対応）
+async function fetchWeatherByPrefectureName(prefectureQuery) {
+  const matches = searchPrefectureMatches(prefectureQuery);
   if (matches.length === 0) {
-    for (const [prefName, code] of Object.entries(prefectureCodes)) {
-      try {
-        const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`;
-        const res = await axios.get(url);
-        const areas = res.data[0].timeSeries[0].areas;
-
-        // area.name に query を含むものを探す
-        const matchedArea = areas.find(a => a.area.name.includes(query));
-        if (matchedArea) {
-          matches.push({ name: prefName, code, matchedAreaName: matchedArea.area.name });
-        }
-      } catch (_) {
-        continue;
-      }
-    }
-
-    if (matches.length === 0) {
-      throw new Error('そんな場所の天気データは見つからないですわｗ');
-    }
+    throw new Error('そんなデータないですわｗ');
   }
 
-  for (const { name, code, matchedAreaName } of matches) {
+  const results = [];
+
+  for (const { name, code } of matches) {
     try {
       const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`;
       const res = await axios.get(url);
       const forecastData = res.data[0];
       const areaSeries = forecastData.timeSeries[0];
-      const selectedAreas = areaSeries.areas;
 
-      let selectedArea = null;
+      // 県全体の天気を表す最初のエリアを取得
+      // （市区町村ではなく県名で返信するため、地域の詳細は使わない）
+      const areaToUse = areaSeries.areas.find(a => a.area.name.includes(name.replace('府', '').replace('県', ''))) || areaSeries.areas[0];
 
-      // 事前に市区名で一致した area 名がわかっている場合
-      if (matchedAreaName) {
-        selectedArea = selectedAreas.find(a => a.area.name === matchedAreaName);
-      }
+      const today = areaToUse.weathers[0];
+      const tomorrow = areaToUse.weathers[1];
 
-      // なければ query で部分一致検索（市区名）
-      if (!selectedArea) {
-        selectedArea = selectedAreas.find(a => a.area.name.includes(query));
-      }
-
-      // 都道府県名ベース
-      if (!selectedArea) {
-        const cleanedName = name.replace(/(都|道|府|県)/, '');
-        selectedArea = selectedAreas.find(a => a.area.name.includes(cleanedName));
-      }
-
-      // 最後の保険
-      if (!selectedArea) {
-        selectedArea = selectedAreas[0];
-      }
-
-      const today = selectedArea.weathers[0];
-      const tomorrow = selectedArea.weathers[1];
-      results.push(`${selectedArea.area.name}の天気は、\n　今日：${today}\n　明日：${tomorrow}`);
+      // 返信は県名を使う（例: 神奈川県の天気）
+      results.push(`${name}の大体の天気\n　今日：${today}\n　明日：${tomorrow}`);
     } catch (err) {
-      results.push(`${name}：取得失敗しましたわ！w`);
+      results.push(`${name}：取得失敗。ふざけんなですわ`);
     }
   }
 
