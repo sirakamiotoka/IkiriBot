@@ -74,9 +74,9 @@ async function fetchWeatherByPrefectureName(prefectureQuery) {
       const today = area.weathers[0];
       const tomorrow = area.weathers[1];
 
-      results.push(`📍${name}（${area.area.name}）\n　今日：${today}\n　明日：${tomorrow}`);
+      results.push(`${area.area.name）\n　今日：${today}\n　明日：${tomorrow}`);
     } catch (err) {
-      results.push(`📍${name}：取得失敗。ふざけんなですわ`);
+      results.push(`${name}：取得失敗。ふざけんなですわ`);
     }
   }
 
