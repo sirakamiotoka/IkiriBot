@@ -90,7 +90,7 @@ async function fetchWeatherByPrefectureName(prefectureQuery) {
       const tomorrow = selectedArea.weathers[1];
       results.push(`${selectedArea.area.name}の天気は、\n　今日：${today}\n　明日：${tomorrow}`);
     } catch (err) {
-      results.push(`${name}：取得失敗しましたわ！w。`);
+      results.push(`${name}：取得失敗しましたわ！w`);
     }
   }
 
