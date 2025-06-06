@@ -215,21 +215,21 @@ client.on(Events.MessageCreate, async message => {
 //    return;
 //  }
 
-//  const query = args.join('');
-//  try {
-//    const weatherText = await fetchWeatherByPrefectureName(query);
-//　　message.reply('仕方ないので教えて差し上げますわｗｗ');
-//    // Discordの文字数制限
-//    const chunks = weatherText.match(/[\s\S]{1,1900}/g);
-//    for (const chunk of chunks) {
-//      await message.reply('```\n' + chunk + '\n```');
-//    }
-//  } catch (err) {
-//    message.reply(err.message);
-//  }
-//
-//  return;
-//}
+  const query = args.join('');
+  try {
+    const weatherText = await fetchWeatherByPrefectureName(query);
+　　message.reply('仕方ないので教えて差し上げますわｗｗ');
+    // Discordの文字数制限
+    const chunks = weatherText.match(/[\s\S]{1,1900}/g);
+    for (const chunk of chunks) {
+      await message.reply('```\n' + chunk + '\n```');
+    }
+  } catch (err) {
+    message.reply(err.message);
+  }
+
+  return;
+}
   
   //デバッグ用
  if (content === '/ik.stcheck') {
