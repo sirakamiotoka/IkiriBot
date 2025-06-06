@@ -50,14 +50,14 @@ const prefectureCodes = {
   '沖縄県': '471000'
 };
 
-// 都道府県名を部分一致で検索して取得
+// 部分一致で都道府県を検索
 function searchPrefectureMatches(query) {
   return Object.entries(prefectureCodes)
     .filter(([name]) => name.includes(query))
     .map(([name, code]) => ({ name, code }));
 }
 
-// 指定された都道府県の天気を取得
+// 天気取得
 async function fetchWeatherByPrefectureName(prefectureQuery) {
   const matches = searchPrefectureMatches(prefectureQuery);
   if (matches.length === 0) {
@@ -65,15 +65,35 @@ async function fetchWeatherByPrefectureName(prefectureQuery) {
   }
 
   const results = [];
+
   for (const { name, code } of matches) {
     try {
       const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`;
       const res = await axios.get(url);
-      const data = res.data[0];
-      const area = data.timeSeries[0].areas[0];
-      const today = area.weathers[0];
-      const tomorrow = area.weathers[1];
-      results.push(`${area.area.name}の大体の天気\n　今日：${today}\n　明日：${tomorrow}`);
+      const forecastData = res.data[0];
+      const areaSeries = forecastData.timeSeries[0];
+
+      // 都道府県名が一致してるものを優先
+      let selectedAreas = areaSeries.areas;
+
+      // 地域名が含まれるならその地域を探す
+      const matchedArea = selectedAreas.find(a => a.area.name.includes(prefectureQuery));
+      
+      let areaToUse = matchedArea;
+
+      // なければ「県」や都道府県名が含まれてるエリアを使う
+      if (!areaToUse) {
+        areaToUse = selectedAreas.find(a => a.area.name.includes('県') || a.area.name.includes(name.replace('府', '').replace('県', '')));
+      }
+
+      // すべての条件にマッチしなかったとき
+      if (!areaToUse) {
+        areaToUse = selectedAreas[0];
+      }
+
+      const today = areaToUse.weathers[0];
+      const tomorrow = areaToUse.weathers[1];
+      results.push(`${areaToUse.area.name}の大体の天気\n　今日：${today}\n　明日：${tomorrow}`);
     } catch (err) {
       results.push(`${name}：取得失敗。ふざけんなですわ`);
     }
