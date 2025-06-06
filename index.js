@@ -208,12 +208,12 @@ client.on(Events.MessageCreate, async message => {
  // const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
   
   //天気 
-//if (content.startsWith('/ik.weather')) {
-//  const args = content.split(' ').slice(1);
-//  if (args.length === 0) {
-//    message.reply('正しいコマンドを入力してくださいましｗｗｗ 例: `/ik.weather 東京`');
-//    return;
-//  }
+if (content.startsWith('/ik.weather')) {
+  const args = content.split(' ').slice(1);
+  if (args.length === 0) {
+    message.reply('正しいコマンドを入力してくださいましｗｗｗ 例: `/ik.weather 東京`');
+    return;
+  }
 
   const query = args.join('');
   try {
