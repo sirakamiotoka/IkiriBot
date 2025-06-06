@@ -162,18 +162,19 @@ client.on(Events.MessageCreate, async message => {
   return;
 }
 
-  //絶対命令
+ 
+
+ //絶対命令
   if (content === '/ik.absolutekill') {
   const allowedUserId = '1289133629972418613'; 
-  if (message.author.id !== allowedUserId) {
+  if (message.author.id === allowedUserId) {
+     if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
+       leaveVC(guildId, 'は？強制切断されましたわ。');
+     } else {
+       message.reply('今はどこにも繋がっていませんわ。');
+     }
+  }else{
     message.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
-    return;
-  }
-
-  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
-    leaveVC(guildId, 'は？強制切断されましたわ。');
-  } else {
-    message.reply('今はどこにも繋がっていませんわ。');
   }
   return;
 }
@@ -218,11 +219,10 @@ if (content.startsWith('/ik.weather')) {
   const query = args.join('');
   try {
     const weatherText = await fetchWeatherByPrefectureName(query);
-　　message.reply('仕方ないので教えて差し上げますわ');
     // Discordの文字数制限
     const chunks = weatherText.match(/[\s\S]{1,1900}/g);
     for (const chunk of chunks) {
-      await message.reply(chunk);
+      await message.reply('仕方ないので教えて差し上げますわ'\n${chunk});
    //   await message.reply('```\n' + chunk + '\n```');
     }
   } catch (err) {
