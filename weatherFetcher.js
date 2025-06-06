@@ -50,21 +50,41 @@ const prefectureCodes = {
   '沖縄県': '471000'
 };
 
-// 部分一致で都道府県または市区名を検索
+// 都道府県名に部分一致
 function searchAreaMatches(query) {
   return Object.entries(prefectureCodes)
     .filter(([name]) => name.includes(query))
     .map(([name, code]) => ({ name, code }));
 }
 
-// 天気取得（都道府県または市区名に対応）
-async function fetchWeatherByPrefectureName(prefectureQuery) {
-  const matches = searchAreaMatches(prefectureQuery);
-  if (matches.length === 0) {
-    throw new Error('地域が見つからねぇですわよｗ');
-  }
-
+// 市区名から逆引き検索（全都道府県をチェック）
+async function fetchWeatherByPrefectureName(query) {
   const results = [];
+
+  // 都道府県名にマッチするものがあれば使う
+  let matches = searchAreaMatches(query);
+
+  // なければすべての都道府県を調べて市区名に一致するエリアを探す
+  if (matches.length === 0) {
+    // すべての都道府県を試す
+    for (const [prefName, code] of Object.entries(prefectureCodes)) {
+      try {
+        const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${code}.json`;
+        const res = await axios.get(url);
+        const areaSeries = res.data[0].timeSeries[0];
+        const found = areaSeries.areas.find(a => a.area.name.includes(query));
+        if (found) {
+          matches.push({ name: prefName, code });
+        }
+      } catch (e) {
+        // 無視して次へ
+      }
+    }
+
+    if (matches.length === 0) {
+      throw new Error('そんな場所の天気データは見つからないですわｗ');
+    }
+  }
 
   for (const { name, code } of matches) {
     try {
@@ -73,17 +93,19 @@ async function fetchWeatherByPrefectureName(prefectureQuery) {
       const forecastData = res.data[0];
       const areaSeries = forecastData.timeSeries[0];
 
-      // 都道府県名が一致しているエリアを優先
-      let selectedArea = areaSeries.areas.find(a => a.area.name.includes(name));
+      const selectedAreas = areaSeries.areas;
 
-      // 市区名が一致しているエリアを探す
+      // 市区名で部分一致を優先
+      let selectedArea = selectedAreas.find(a => a.area.name.includes(query));
+
+      // なければ都道府県名で検索
       if (!selectedArea) {
-        selectedArea = areaSeries.areas.find(a => a.area.name.includes(prefectureQuery));
+        selectedArea = selectedAreas.find(a => a.area.name.includes(name.replace(/(都|道|府|県)/, '')));
       }
 
-      // 一致するエリアが見つからない場合、最初のエリアを使用
+      // 条件の一致がないときの最終手段
       if (!selectedArea) {
-        selectedArea = areaSeries.areas[0];
+        selectedArea = selectedAreas[0];
       }
 
       const today = selectedArea.weathers[0];
