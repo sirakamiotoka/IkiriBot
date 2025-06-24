@@ -30,7 +30,7 @@ async function sanitizeText(text, guild) {
   const userMentionRegex = /<@!?(\d+)>/g;
   text = text.replace(userMentionRegex, (match, userId) => {
     const member = guild.members.cache.get(userId);
-    return member ? `${member.displayName}さん` : '誰か';
+    return member ? `指名、${member.displayName}` : '誰か';
   });
 
   return text
