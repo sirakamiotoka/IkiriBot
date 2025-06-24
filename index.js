@@ -1,11 +1,13 @@
+require('dotenv').config(); 
+const express = require('express');
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const gTTS = require('gtts');
-const express = require('express');
 
+// Discordクライアント作成
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -387,15 +389,27 @@ if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
   }
 });
 
-// Expressサーバー（常駐用）
+// Expressサーバー起動
 const app = express();
+const port = process.env.PORT || 3000;
+
 app.get('/', (req, res) => {
   res.send('Bot is running!');
 });
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
 
-// Discordログイン
-client.login(process.env.BOT_TOKEN);
+app.listen(port, () => {
+  console.log(`✔ Express listening on port ${port}`);
+
+  // Express 起動後に Discord Bot を起動
+  if (!process.env.BOT_TOKEN) {
+    console.error("BOT_TOKEN が .env に設定されていません");
+    process.exit(1);
+  }
+
+  client.login(process.env.BOT_TOKEN).then(() => {
+    console.log(" Discord bot ログイン成功");
+  }).catch(err => {
+    console.error("Discord bot ログイン失敗:", err);
+    process.exit(1);
+  });
+});
