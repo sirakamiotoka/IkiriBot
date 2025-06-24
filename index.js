@@ -34,7 +34,7 @@ function sanitizeText(text) {
 }
 
 // テキスト短縮
-function shortenText(text, limit = 50) {
+function shortenText(text, limit = 70) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
 }
 
@@ -207,7 +207,7 @@ client.on(Events.MessageCreate, async message => {
   }
 
   //天気
-  
+  /*
   const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
    
 if (content === '/ik.weather') {
@@ -232,7 +232,7 @@ if (content === '/ik.weather') {
 
   return;
 }
-  
+  */
   //デバッグ用
  if (content === '/ik.stcheck') {
    if (voiceConnections[guildId] && voiceConnections[guildId].state) {
