@@ -207,7 +207,7 @@ client.on(Events.MessageCreate, async message => {
   }
 
   //天気
-/*  const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
+  const { fetchWeatherByPrefectureName } = require('./weatherFetcher');
    
 if (content.startsWith('/ik.weather')) {
   const args = content.split(' ').slice(1);
@@ -215,7 +215,7 @@ if (content.startsWith('/ik.weather')) {
     message.reply('正しいコマンドを入力してくださいましｗ 例: `/ik.weather 東京`');
     return;
   }
-*/
+
   const query = args.join('');
   try {
     const weatherText = await fetchWeatherByPrefectureName(query);
