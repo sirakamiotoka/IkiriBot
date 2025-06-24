@@ -24,8 +24,15 @@ let isPlaying = {}; // サーバーごとの再生状態
 // サーバーごとの誤読される名前のマッピング
 let nameMappings = {}; // key: guildId, value: nameMapping
 
+
 // テキストのサニタイズ
-function sanitizeText(text) {
+async function sanitizeText(text, guild) {
+  const userMentionRegex = /<@!?(\d+)>/g;
+  text = text.replace(userMentionRegex, (match, userId) => {
+    const member = guild.members.cache.get(userId);
+    return member ? `${member.displayName}さん` : '誰か';
+  });
+
   return text
     .replace(/<a?:\w+:\d+>/g, '') // カスタム絵文字除去
     .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる') // URLを"ゆーあーるえる"に置換
@@ -303,21 +310,24 @@ if (content === '/ik.weather') {
   }
 
   // 通常メッセージ読み上げ
-if (voiceConnections[guildId] && message.channel.id === activeChannels[guildId] && !content.startsWith('/')) {
-  let text = sanitizeText(content);
-  if (text.length === 0) return;
+  if (
+    voiceConnections[guildId] &&
+    message.channel.id === activeChannels[guildId] &&
+    !content.startsWith('/')
+  ) {
+    let text = await sanitizeText(content, message.guild); // ← 修正ポイント
+    if (text.length === 0) return;
 
-  // 誤読修正の適用
-  text = correctNamePronunciation(text, guildId);
+    // 誤読修正の適用
+    text = correctNamePronunciation(text, guildId);
+    text = shortenText(text);
+    const uniqueId = uuidv4();
+    const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
 
-  text = shortenText(text);
-  const uniqueId = uuidv4();
-  const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
-
-  if (!audioQueue[guildId]) audioQueue[guildId] = [];
-  audioQueue[guildId].push({ text, file: filePath });
-  playNextInQueue(guildId);
-}
+    if (!audioQueue[guildId]) audioQueue[guildId] = [];
+    audioQueue[guildId].push({ text, file: filePath });
+    playNextInQueue(guildId);
+  }
 });
 
 // VCの出入りを読み上げ
