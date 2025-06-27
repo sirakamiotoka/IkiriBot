@@ -205,7 +205,7 @@ client.on(Events.MessageCreate, async message => {
       adapterCreator: message.guild.voiceAdapterCreator,
     });
     activeChannels[guildId] = message.channel.id;
-    message.reply('入りましたわ。だる。');
+    message.reply('入ってあげましたわ。');
     return;
   }
 
@@ -272,7 +272,7 @@ if (content === '/ik.weather') {
         message.reply(`${incorrectName} はすでに登録されてますわボケ。`);
       } else {
         nameMappings[guildId][incorrectName] = correctReading;
-        message.reply(`新しいの登録してやりました、ほんまだるいですわ: ${incorrectName} → ${correctReading}`);
+        message.reply(`新しいの登録してやりました、感謝してくださいまし: ${incorrectName} → ${correctReading}`);
       }
     } else {
       message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik.addword 白神 しらかみ');
@@ -381,7 +381,7 @@ if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
         
         const textChannel = client.channels.cache.get(activeChannels[guildId]);
         if (textChannel && textChannel.isTextBased()) {
-          textChannel.send('誰もVCにいなくなったので自害します');
+          textChannel.send('誰もVCにいなくなったので消滅します');
         }
         activeChannels[guildId] = null;
       }
