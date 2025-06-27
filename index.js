@@ -196,7 +196,7 @@ client.on(Events.MessageCreate, async message => {
     }
 
     if (!message.member.voice.channel) {
-      message.reply('先にお前がVC入ってから言いませんこと？もしかしてアホの方でございますか？');
+      message.reply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
       return;
     }
     voiceConnections[guildId] = joinVoiceChannel({
