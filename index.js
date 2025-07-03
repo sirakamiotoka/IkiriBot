@@ -259,38 +259,36 @@ client.on(Events.MessageCreate, async message => {
   }
 
   //  通常メッセージ読み上げ
-  if (
-    voiceConnections[guildId] &&
-    message.channel.id === activeChannels[guildId] &&
-    !content.startsWith('/')
-  ) {
+if (
+  voiceConnections[guildId] &&
+  message.channel.id === activeChannels[guildId] &&
+  !content.startsWith('/')
+) {
+  if (!audioQueue[guildId]) audioQueue[guildId] = [];
+
+  // 通常メッセージがあれば読み上げ
+  if (content.trim().length > 0) {
     let text = await sanitizeText(content, message.guild);
-    if (text.length === 0) return;
-    text = correctNamePronunciation(text, guildId);
-    text = shortenText(text);
-    const uniqueId = uuidv4();
-    const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
-    if (!audioQueue[guildId]) audioQueue[guildId] = [];
-    audioQueue[guildId].push({ text, file: filePath });
-    playNextInQueue(guildId);
+    if (text.length > 0) {
+      text = correctNamePronunciation(text, guildId);
+      text = shortenText(text);
+      const uniqueId = uuidv4();
+      const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
+      audioQueue[guildId].push({ text, file: filePath });
+    }
   }
 
-  //  添付ファイルがある場合の読み上げ
-  if (
-    voiceConnections[guildId] &&
-    message.channel.id === activeChannels[guildId] &&
-    message.attachments.size > 0 &&
-    !content.startsWith('/')
-  ) {
+  // 添付ファイルがある場合「てんふぁい」と読み上げ
+  if (message.attachments.size > 0) {
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `attachment_${uniqueId}.mp3`);
     const fileText = 'てんふぁい。';
-
-    if (!audioQueue[guildId]) audioQueue[guildId] = [];
     audioQueue[guildId].push({ text: fileText, file: filePath });
-    playNextInQueue(guildId);
   }
-});
+
+  playNextInQueue(guildId);
+}
+
 
 // VC出入り読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
@@ -323,24 +321,24 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     playNextInQueue(guildId);
   }
 
-  const channel = voiceConnections[guildId].joinConfig.channelId
-    ? newState.guild.channels.cache.get(voiceConnections[guildId].joinConfig.channelId)
-    : null;
-
-  if (channel) {
-    const nonBotMembers = channel.members.filter(member => !member.user.bot);
-    if (nonBotMembers.size === 0) {
-      if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
-        voiceConnections[guildId].destroy();
-        voiceConnections[guildId] = null;
-        const textChannel = client.channels.cache.get(activeChannels[guildId]);
-        if (textChannel && textChannel.isTextBased()) {
-          textChannel.send('誰もVCにいなくなったので消滅します');
-        }
-        activeChannels[guildId] = null;
+const botMember = newState.guild.members.me;
+const currentVC = botMember?.voice?.channel;
+//ここから↓7/3
+if (currentVC) {
+  const nonBotMembers = currentVC.members.filter(member => !member.user.bot);
+  if (nonBotMembers.size === 0) {
+    if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
+      voiceConnections[guildId].destroy();
+      voiceConnections[guildId] = null;
+      const textChannel = client.channels.cache.get(activeChannels[guildId]);
+      if (textChannel && textChannel.isTextBased()) {
+        textChannel.send('誰もVCにいなくなったので消滅します');
       }
+      activeChannels[guildId] = null;
     }
   }
+}
+//ここまで↑
 });
 
 // Express
