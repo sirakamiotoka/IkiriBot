@@ -71,6 +71,8 @@ async function playNextInQueue(guildId) {
     !voiceConnections[guildId] ||
     voiceConnections[guildId].state.status === 'destroyed'
   ) {
+    isPlaying[guildId] = false;
+    audioQueue[guildId] = [];
     return;
   }
 
