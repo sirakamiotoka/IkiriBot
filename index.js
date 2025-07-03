@@ -259,35 +259,25 @@ client.on(Events.MessageCreate, async message => {
   }
 
   //  通常メッセージ読み上げ
-if (
-  voiceConnections[guildId] &&
-  message.channel.id === activeChannels[guildId] &&
-  !content.startsWith('/')
-) {
-  if (!audioQueue[guildId]) audioQueue[guildId] = [];
+  if (
+    voiceConnections[guildId] &&
+    message.channel.id === activeChannels[guildId] &&
+    !content.startsWith('/')
+  ) {
+    let text = await sanitizeText(content, message.guild); // ← 修正ポイント
+    if (text.length === 0) return;
 
-  // 通常メッセージがあれば読み上げ
-  if (content.trim().length > 0) {
-    let text = await sanitizeText(content, message.guild);
-    if (text.length > 0) {
-      text = correctNamePronunciation(text, guildId);
-      text = shortenText(text);
-      const uniqueId = uuidv4();
-      const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
-      audioQueue[guildId].push({ text, file: filePath });
-    }
-  }
-
-  // 添付ファイルがある場合「てんふぁい」と読み上げ
-  if (message.attachments.size > 0) {
+    // 誤読修正の適用
+    text = correctNamePronunciation(text, guildId);
+    text = shortenText(text);
     const uniqueId = uuidv4();
-    const filePath = path.join(__dirname, `attachment_${uniqueId}.mp3`);
-    const fileText = 'てんふぁい。';
-    audioQueue[guildId].push({ text: fileText, file: filePath });
-  }
+    const filePath = path.join(__dirname, message_${uniqueId}.mp3);
 
-  playNextInQueue(guildId);
-}
+    if (!audioQueue[guildId]) audioQueue[guildId] = [];
+    audioQueue[guildId].push({ text, file: filePath });
+    playNextInQueue(guildId);
+  }
+});
 
 
 // VC出入り読み上げ
