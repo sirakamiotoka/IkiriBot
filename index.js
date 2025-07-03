@@ -75,9 +75,8 @@ async function playNextInQueue(guildId) {
     audioQueue[guildId] = [];
     return;
   }
-
-  const { text, file } = audioQueue[guildId].shift();
   isPlaying[guildId] = true;
+  const { text, file } = audioQueue[guildId].shift();
 
   try {
     await speakText(text, 'ja', file);
