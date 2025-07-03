@@ -271,8 +271,8 @@ client.on(Events.MessageCreate, async message => {
     text = correctNamePronunciation(text, guildId);
     text = shortenText(text);
     const uniqueId = uuidv4();
-    const filePath = path.join(__dirname, message_${uniqueId}.mp3);
-
+    const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
+    
     if (!audioQueue[guildId]) audioQueue[guildId] = [];
     audioQueue[guildId].push({ text, file: filePath });
     playNextInQueue(guildId);
