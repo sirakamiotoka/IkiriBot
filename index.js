@@ -131,9 +131,19 @@ function leaveVC(guildId, reasonText = '切断されましたわ。') {
     activeChannels[guildId] = null;
   }
 
+  // キューの音声ファイルを削除
+  if (audioQueue[guildId]) {
+    for (const item of audioQueue[guildId]) {
+      fs.unlink(item.file, err => {
+        if (err) console.error(`未処理ファイル削除失敗: ${err.message}`);
+      });
+    }
+  }
+
   isPlaying[guildId] = false;
   audioQueue[guildId] = [];
 }
+
 
 // Bot起動時
 client.once(Events.ClientReady, c => {
