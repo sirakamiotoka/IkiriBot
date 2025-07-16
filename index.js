@@ -61,50 +61,50 @@ async function speakText(text, lang = 'ja', filepath) {
 
 // 音声再生関数
 async function playNextInQueue(guildId) {
-  if (
-    isPlaying[guildId] ||
-    !audioQueue[guildId] ||
-    audioQueue[guildId].length === 0 ||
-    !voiceConnections[guildId] ||
-    voiceConnections[guildId].state.status === 'destroyed'
-  ) {
-    isPlaying[guildId] = false;
-    //audioQueue[guildId] = [];
-    return;
-  }
+  if (isPlaying[guildId]) return;
   isPlaying[guildId] = true;
-  const { text, file } = audioQueue[guildId].shift();
 
-  try {
-    await speakText(text, 'ja', file);
+  while (
+    audioQueue[guildId] &&
+    audioQueue[guildId].length > 0 &&
+    voiceConnections[guildId] &&
+    voiceConnections[guildId].state.status !== 'destroyed'
+  ) {
+    const { text, file } = audioQueue[guildId].shift();
 
-    const player = createAudioPlayer();
-    const resource = createAudioResource(file);
-    player.play(resource);
+    try {
+      await speakText(text, 'ja', file);
 
-    if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
+      const player = createAudioPlayer();
+      const resource = createAudioResource(file);
+      player.play(resource);
+
       voiceConnections[guildId].subscribe(player);
-    }
 
-    player.on(AudioPlayerStatus.Idle, () => {
-      fs.unlink(file, (err) => {
-        if (err) console.error(`ファイル削除エラー: ${err}`);
+      await new Promise((resolve, reject) => {
+        player.once(AudioPlayerStatus.Idle, () => {
+          fs.unlink(file, (err) => {
+            if (err) console.error(`ファイル削除エラー: ${err}`);
+          });
+          resolve();
+        });
+
+        player.once('error', (error) => {
+          console.error(`AudioPlayer エラー: ${error.message}`);
+          fs.unlink(file, (err) => {
+            if (err) console.error(`ファイル削除エラー: ${err}`);
+          });
+          resolve(); // 再生エラーでも次に進める
+        });
       });
-      isPlaying[guildId] = false;
-      playNextInQueue(guildId);
-    });
-
-    player.on('error', (error) => {
-      console.error(`AudioPlayer エラー: ${error.message}`);
-      isPlaying[guildId] = false;
-      playNextInQueue(guildId);
-    });
-  } catch (err) {
-    console.error('読み上げエラー:', err);
-    isPlaying[guildId] = false;
-    playNextInQueue(guildId);
+    } catch (err) {
+      console.error('再生中エラー:', err);
+    }
   }
+
+  isPlaying[guildId] = false;
 }
+
 
 // 誤読修正
 function correctNamePronunciation(name, guildId) {
