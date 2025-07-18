@@ -1,4 +1,8 @@
 require('dotenv').config(); 
+
+const ffmpeg = require('fluent-ffmpeg');
+const { StreamType } = require('@discordjs/voice');
+
 const express = require('express');
 const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
@@ -59,6 +63,25 @@ async function speakText(text, lang = 'ja', filepath) {
   });
 }
 
+async function convertToPCM(mp3Path, pcmPath) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(mp3Path)
+      .outputOptions([
+        '-f s16le',          // リニアPCM
+        '-ar 48000',         // サンプリングレート
+        '-ac 2'              // ステレオ
+      ])
+      .save(pcmPath)
+      .on('end', () => resolve(pcmPath))
+      .on('error', (err) => {
+        console.error('ffmpeg変換エラー:', err);
+        reject(err);
+      });
+  });
+}
+
+
+
 // 音声再生関数
 async function playNextInQueue(guildId) {
   if (isPlaying[guildId]) return;
@@ -71,20 +94,27 @@ async function playNextInQueue(guildId) {
     voiceConnections[guildId].state.status !== 'destroyed'
   ) {
     const { text, file } = audioQueue[guildId].shift();
+    const pcmFile = file.replace('.mp3', '.pcm');
 
     try {
       await speakText(text, 'ja', file);
+      await convertToPCM(file, pcmFile);
 
       const player = createAudioPlayer();
-      const resource = createAudioResource(file);
-      player.play(resource);
+      const resource = createAudioResource(pcmFile, {
+        inputType: StreamType.Raw,
+      });
 
+      player.play(resource);
       voiceConnections[guildId].subscribe(player);
 
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         player.once(AudioPlayerStatus.Idle, () => {
           fs.unlink(file, (err) => {
-            if (err) console.error(`ファイル削除エラー: ${err}`);
+            if (err) console.error(`MP3削除エラー: ${err}`);
+          });
+          fs.unlink(pcmFile, (err) => {
+            if (err) console.error(`PCM削除エラー: ${err}`);
           });
           resolve();
         });
@@ -92,9 +122,12 @@ async function playNextInQueue(guildId) {
         player.once('error', (error) => {
           console.error(`AudioPlayer エラー: ${error.message}`);
           fs.unlink(file, (err) => {
-            if (err) console.error(`ファイル削除エラー: ${err}`);
+            if (err) console.error(`MP3削除エラー: ${err}`);
           });
-          resolve(); // 再生エラーでも次に進める
+          fs.unlink(pcmFile, (err) => {
+            if (err) console.error(`PCM削除エラー: ${err}`);
+          });
+          resolve();
         });
       });
     } catch (err) {
@@ -104,6 +137,7 @@ async function playNextInQueue(guildId) {
 
   isPlaying[guildId] = false;
 }
+
 
 
 // 誤読修正
