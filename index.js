@@ -1,5 +1,5 @@
 require('dotenv').config(); 
-
+const ffmpegPath = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
 const { StreamType } = require('@discordjs/voice');
 
