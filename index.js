@@ -79,22 +79,6 @@ async function convertToPCM(mp3Path, pcmPath) {
       });
   });
 }
-async function convertToWav(mp3Path, wavPath) {
-  return new Promise((resolve, reject) => {
-    ffmpeg(mp3Path)
-      .outputOptions([
-        '-ar 48000',   // サンプリングレート
-        '-ac 2',       // ステレオ
-        '-f wav'       // WAV形式で出力
-      ])
-      .save(wavPath)
-      .on('end', () => resolve(wavPath))
-      .on('error', err => {
-        console.error('WAV変換エラー:', err);
-        reject(err);
-      });
-  });
-}
 
 
 
@@ -110,47 +94,42 @@ async function playNextInQueue(guildId) {
     voiceConnections[guildId].state.status !== 'destroyed'
   ) {
     const { text, file } = audioQueue[guildId].shift();
-    const wavFile = file.replace('.mp3', '.wav');
 
     try {
       await speakText(text, 'ja', file);
-      await convertToWav(file, wavFile);
+
+      const pcmPath = file.replace('.mp3', '.pcm');
+      await convertToPCM(file, pcmPath);
 
       const player = createAudioPlayer();
 
-      // WAVファイルを読み込むストリームを作成
-      const stream = fs.createReadStream(wavFile);
+      const stream = fs.createReadStream(pcmPath);
 
       const resource = createAudioResource(stream, {
-        inputType: StreamType.Raw,  // 注意: WAVはヘッダー付きPCMなので、StreamType.Arbitraryでも可
+        inputType: StreamType.Raw,
+        inlineVolume: true  
       });
+
+      resource.volume.setVolume(0.8); 
 
       player.play(resource);
       voiceConnections[guildId].subscribe(player);
 
       await new Promise((resolve) => {
         player.once(AudioPlayerStatus.Idle, () => {
-          // 再生終了時ファイル削除
-          fs.unlink(file, (err) => {
-            if (err) console.error(`MP3削除エラー: ${err}`);
-          });
-          fs.unlink(wavFile, (err) => {
-            if (err) console.error(`WAV削除エラー: ${err}`);
-          });
+          fs.unlink(file, () => {});
+          fs.unlink(pcmPath, () => {});
           resolve();
         });
 
         player.once('error', (error) => {
           console.error(`AudioPlayer エラー: ${error.message}`);
-          fs.unlink(file, (err) => {
-            if (err) console.error(`MP3削除エラー: ${err}`);
-          });
-          fs.unlink(wavFile, (err) => {
-            if (err) console.error(`WAV削除エラー: ${err}`);
-          });
+          fs.unlink(file, () => {});
+          fs.unlink(pcmPath, () => {});
           resolve();
         });
       });
+
     } catch (err) {
       console.error('再生中エラー:', err);
     }
@@ -158,6 +137,9 @@ async function playNextInQueue(guildId) {
 
   isPlaying[guildId] = false;
 }
+
+
+
 
 
 // 誤読修正
