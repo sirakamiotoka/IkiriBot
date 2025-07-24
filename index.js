@@ -327,6 +327,11 @@ if (content === '/ik.namespeak off') {
   message.reply('もう名前は呼んであげませんわw');
   return;
 }
+
+   if (content.startsWith('/ik.namespeak')) {
+    message.reply('正しいコマンドすら入力できないのですか？ｗ お手本: `/ik.namespeak on` または `/ik.namespeak off`');
+    return;
+  }
 // 07.24追加終了
 
   //  通常メッセージ読み上げ
@@ -338,16 +343,6 @@ if (content === '/ik.namespeak off') {
     let text = await sanitizeText(content, message.guild); // ← 修正ポイント
     if (text.length === 0) return;
 
-    // 添付ファイルがあるとき 07.24 2個目
-    if (message.attachments.size > 0) {
-      const imageCount = message.attachments.filter(att => att.contentType?.startsWith('image/')).size;
-      const otherCount = message.attachments.size - imageCount;
-
-      if (imageCount > 0) text += ' がぞうファイル。';
-      if (otherCount > 0) text += ' てんぷファイル。';
-    }
-// 添付ファイルがあるとき終了 07.24 2個目
-    
     if (speakUserName[guildId]) {
     const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
     text = `${speakerName}、${text}`;
