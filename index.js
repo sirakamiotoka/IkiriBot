@@ -97,23 +97,31 @@ async function playNextInQueue(guildId) {
 
     try {
       await speakText(text, 'ja', file);
-
       const pcmPath = file.replace('.mp3', '.pcm');
       await convertToPCM(file, pcmPath);
 
       const player = createAudioPlayer();
-
       const stream = fs.createReadStream(pcmPath);
 
       const resource = createAudioResource(stream, {
         inputType: StreamType.Raw,
-        inlineVolume: true  
+        inlineVolume: true
       });
 
-      resource.volume.setVolume(0.8); 
-
+      resource.volume.setVolume(0.8);
       player.play(resource);
-      voiceConnections[guildId].subscribe(player);
+
+      if (
+        voiceConnections[guildId] &&
+        voiceConnections[guildId].state.status !== 'destroyed'
+      ) {
+        voiceConnections[guildId].subscribe(player);
+      } else {
+        console.warn(`再生中断: VCが切断されていました (guildId: ${guildId})`);
+        fs.unlink(file, () => {});
+        fs.unlink(pcmPath, () => {});
+        break; 
+      }
 
       await new Promise((resolve) => {
         player.once(AudioPlayerStatus.Idle, () => {
