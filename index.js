@@ -27,6 +27,7 @@ let voiceConnections = {};
 const audioQueue = {};
 let isPlaying = {};
 let nameMappings = {};
+let speakUserName = {}; //07.24
 
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
@@ -196,10 +197,13 @@ client.once(Events.ClientReady, c => {
 
 // メッセージ処理
 client.on(Events.MessageCreate, async message => {
+  
   if (message.author.bot) return;
   const content = message.content;
   const guildId = message.guild.id;
 
+  if (!speakUserName[guildId]) speakUserName[guildId] = false; // 07.24
+  
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
@@ -311,6 +315,19 @@ client.on(Events.MessageCreate, async message => {
     }
     return;
   }
+// 07.24追加
+  if (content === '/ik.namespeak on') {
+  speakUserName[guildId] = true;
+  message.reply('名前も呼んであげますわ。光栄に思いなさいｗ');
+  return;
+}
+
+if (content === '/ik.namespeak off') {
+  speakUserName[guildId] = false;
+  message.reply('もう名前は呼んであげませんわw');
+  return;
+}
+// 07.24追加終了
 
   //  通常メッセージ読み上げ
   if (
@@ -320,6 +337,11 @@ client.on(Events.MessageCreate, async message => {
   ) {
     let text = await sanitizeText(content, message.guild); // ← 修正ポイント
     if (text.length === 0) return;
+
+    if (speakUserName[guildId]) {
+    const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
+    text = `${speakerName}、${text}`;
+  }
 
     // 誤読修正の適用
     text = correctNamePronunciation(text, guildId);
