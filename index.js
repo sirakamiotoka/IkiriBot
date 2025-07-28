@@ -28,6 +28,8 @@ const audioQueue = {};
 let isPlaying = {};
 let nameMappings = {};
 let speakUserName = {}; //07.24
+const lastSpeakerInfo = {}; 
+
 
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
@@ -360,12 +362,31 @@ if (content === '/ik.namespeak off') {
   ) {
     let text = await sanitizeText(content, message.guild); // ← 修正ポイント
     if (text.length === 0) return;
-
+/* 
+07.28修正
     if (speakUserName[guildId]) {
     const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
     text = `${speakerName}、${text}`;
   }
+*/
 
+    //07.28追加
+    if (speakUserName[guildId]) {
+  const speakerId = message.author.id;
+  const now = Date.now();
+
+  const last = lastSpeakerInfo[guildId];
+  const shouldSpeakName = !last || last.userId !== speakerId || (now - last.timestamp > 20000); 
+
+  if (shouldSpeakName) {
+    const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
+    text = `${speakerName}、${text}`;
+  }
+
+  lastSpeakerInfo[guildId] = { userId: speakerId, timestamp: now };
+}
+    //追加終了
+    
     // 誤読修正の適用
     text = correctNamePronunciation(text, guildId);
     text = shortenText(text);
