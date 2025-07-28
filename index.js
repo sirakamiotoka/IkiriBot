@@ -208,7 +208,8 @@ client.on(Events.MessageCreate, async message => {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
   }
-
+/*
+07.28コメントアウト
   if (content === '/ik.kill') {
     if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
       leaveVC(guildId, 'は？何してくれやがりますの？');
@@ -217,7 +218,24 @@ client.on(Events.MessageCreate, async message => {
     }
     return;
   }
+*/
+  // 修正後
+if (content === '/ik.kill') {
+  const botVC = message.guild.members.me?.voice?.channelId;
+  const userVC = message.member.voice?.channelId;
 
+  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
+    if (botVC && botVC === userVC) {
+      leaveVC(guildId, 'は？何してくれやがりますの？');
+    } else {
+      message.reply('同じVCにいない君には命令権限はありませんわｗｗ');
+    }
+  } else {
+    message.reply('どこにも繋いでないですわねwざんねん！w');
+  }
+  return;
+}
+  
   if (content === '/ik.absolutekill') {
     const allowedUserId = '1289133629972418613';
     if (message.author.id === allowedUserId) {
@@ -373,6 +391,37 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
   if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
+  // 07.28移動
+const botMember = newState.guild.members.me;
+const currentVC = botMember?.voice?.channel;
+  // 移動終了
+
+// 07.28追加
+  if (!currentVC) return;
+
+　// 読み上げ対象をBotと同じVCに限定
+if (
+  (newState.channelId && newState.channelId !== currentVC.id) &&
+  (oldState.channelId && oldState.channelId !== currentVC.id)
+) {
+  return;
+}
+ // 追加終了
+
+// 修正後↓
+  let text = null;
+if (!oldState.channel && newState.channel && newState.channelId === currentVC.id) {
+  const member = newState.member || newState.guild.members.cache.get(newState.id);
+  const correctedName = correctNamePronunciation(member?.displayName, guildId);
+  text = `${correctedName}が侵入しましたわね。`;
+} else if (oldState.channel && !newState.channel && oldState.channelId === currentVC.id) {
+  const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
+  const correctedName = correctNamePronunciation(member?.displayName, guildId);
+  text = `${correctedName}がくたばりました。`;
+}
+  
+  /*
+  07.28コメントアウト
   let text = null;
   if (!oldState.channel && newState.channel) {
     const member = newState.member || newState.guild.members.cache.get(newState.id);
@@ -383,7 +432,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     const correctedName = correctNamePronunciation(member?.displayName, guildId);
     text = `${correctedName}がくたばりました。`;
   }
-
+  */
   if (text) {
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `vc_notice_${uniqueId}.mp3`);
@@ -392,8 +441,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     playNextInQueue(guildId);
   }
 
-const botMember = newState.guild.members.me;
-const currentVC = botMember?.voice?.channel;
+
+  
 //ここから↓7/3
 if (currentVC) {
   const nonBotMembers = currentVC.members.filter(member => !member.user.bot);
