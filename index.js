@@ -74,7 +74,7 @@ async function convertToPCM(mp3Path, pcmPath) {
         '-ar 48000',         // サンプリングレート
         '-ac 2'              // ステレオ
       ])
-      .audioFilters('atempo=1.5') //07.29追加
+      .audioFilters('atempo=1.3') //07.29追加
       
       .save(pcmPath)
       .on('end', () => resolve(pcmPath))
