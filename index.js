@@ -29,7 +29,7 @@ let isPlaying = {};
 let nameMappings = {};
 let speakUserName = {}; //07.24
 const lastSpeakerInfo = {}; 
-
+// const speechSpeed = {}; //07.29
 
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
@@ -74,6 +74,8 @@ async function convertToPCM(mp3Path, pcmPath) {
         '-ar 48000',         // サンプリングレート
         '-ac 2'              // ステレオ
       ])
+      .audioFilters('atempo=1.5') //07.29追加
+      
       .save(pcmPath)
       .on('end', () => resolve(pcmPath))
       .on('error', (err) => {
@@ -354,6 +356,27 @@ if (content === '/ik.namespeak off') {
   }
 // 07.24追加終了
 
+  /*
+// 07.29追加
+  if (content.startsWith('/ik.speed')) {
+  const args = content.split(' ').slice(1);
+  if (args.length !== 1) {
+    message.reply(' `/ik.speed 1.0` のように入力してくださいましｗ');
+    return;
+  }
+
+  const speed = parseFloat(args[0]);
+  if (isNaN(speed) || speed < 0.5 || speed > 2.0) {
+    message.reply('読み上げ速度は **0.5〜2.0** の範囲で入力してくださいまし');
+    return;
+  }
+
+  speechSpeed[guildId] = speed;
+  message.reply(`読み上げ速度を ${speed} に変更しましたわ`);
+  return;
+}
+  // 07.29追加終了
+  */
   //  通常メッセージ読み上げ
   if (
     voiceConnections[guildId] &&
