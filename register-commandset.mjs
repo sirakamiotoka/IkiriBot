@@ -1,8 +1,10 @@
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
-require('dotenv').config();
+import { config } from 'dotenv';
+import { REST, Routes, SlashCommandBuilder } from 'discord.js';
+
+config();
 
 const commands = [
-  new SlashCommandBuilder().setName('ik.commandset').setDescription('このサーバーにコマンドを登録してあげますわよ。')
+  new SlashCommandBuilder().setName('ik.commandset').setDescription('このサーバーにコマンドを登録してあげますわよ。').toJSON()
 ];
 
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
