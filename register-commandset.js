@@ -1,23 +1,23 @@
-import { config } from 'dotenv';
-import { REST, Routes, SlashCommandBuilder } from 'discord.js';
-
-config();
+require('dotenv').config();
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 const commands = [
-  new SlashCommandBuilder().setName('ik.commandset').setDescription('このサーバーにコマンドを登録してあげますわよ。').toJSON()
-];
+  new SlashCommandBuilder()
+    .setName('ik.commandset')
+    .setDescription('このサーバーにikコマンドを登録してあげますわ')
+].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
 (async () => {
   try {
-    console.log('コマンド登録中...');
+    console.log('コマンドを登録中 (/ik.commandset)...');
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands }
     );
-    console.log('登録成功！');
-  } catch (error) {
-    console.error('登録失敗:', error);
+    console.log('登録完了 (/ik.commandset)');
+  } catch (err) {
+    console.error('登録エラー:', err);
   }
 })();
