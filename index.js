@@ -30,7 +30,7 @@ let nameMappings = {};
 let speakUserName = {}; //07.24
 const lastSpeakerInfo = {}; 
 // const speechSpeed = {}; //07.29
-const { REST, Routes, SlashCommandBuilder, Events } = require('discord.js');//08.04
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');//08.04
 // 定義したいスラッシュコマンド一覧
 
 const ikCommands = [
