@@ -66,6 +66,33 @@ async function speakText(text, lang = 'ja', filepath) {
   });
 }
 
+const { spawn } = require('child_process');
+
+
+ // ffmpegでMP3をリニアPCMに変換し、標準出力のストリームとして返す
+
+function convertToPCMStream(mp3Path) {
+  const ffmpeg = spawn(ffmpegPath, [
+    '-i', mp3Path,
+    '-f', 's16le',
+    '-ar', '48000',
+    '-ac', '2',
+    '-af', 'atempo=1.3',
+    'pipe:1'
+  ]);
+
+  ffmpeg.stderr.on('data', (data) => {
+    // console.log(`ffmpeg stderr: ${data}`); // ←デバッグ時だけ表示
+  });
+
+  ffmpeg.on('error', (err) => {
+    console.error(`ffmpeg スポーン失敗: ${err.message}`);
+  });
+
+  return ffmpeg.stdout;
+}
+
+
 async function convertToPCM(mp3Path, pcmPath) {
   return new Promise((resolve, reject) => {
     ffmpeg(mp3Path)
@@ -88,6 +115,8 @@ async function convertToPCM(mp3Path, pcmPath) {
 
 
 // 音声再生関数
+/*
+08.04
 async function playNextInQueue(guildId) {
   if (isPlaying[guildId]) return;
   isPlaying[guildId] = true;
@@ -150,7 +179,68 @@ async function playNextInQueue(guildId) {
 
   isPlaying[guildId] = false;
 }
+*/
 
+//08.04
+async function playNextInQueue(guildId) {
+  if (isPlaying[guildId]) return;
+  isPlaying[guildId] = true;
+
+  while (
+    audioQueue[guildId] &&
+    audioQueue[guildId].length > 0 &&
+    voiceConnections[guildId] &&
+    voiceConnections[guildId].state.status !== 'destroyed'
+  ) {
+    const { text, file } = audioQueue[guildId].shift();
+
+    try {
+      // ❶ gTTSを非同期生成
+      await speakText(text, 'ja', file);
+
+      // ❷ ffmpegをパイプで変換
+      const stream = convertToPCMStream(file);
+
+      // ❸ Discordで再生
+      const player = createAudioPlayer();
+      const resource = createAudioResource(stream, {
+        inputType: StreamType.Raw,
+        inlineVolume: true
+      });
+      resource.volume.setVolume(0.8);
+      player.play(resource);
+
+      if (
+        voiceConnections[guildId] &&
+        voiceConnections[guildId].state.status !== 'destroyed'
+      ) {
+        voiceConnections[guildId].subscribe(player);
+      } else {
+        fs.unlink(file, () => {});
+        break;
+      }
+
+      await new Promise((resolve) => {
+        player.once(AudioPlayerStatus.Idle, () => {
+          fs.unlink(file, () => {});
+          resolve();
+        });
+
+        player.once('error', (error) => {
+          console.error(`AudioPlayer エラー: ${error.message}`);
+          fs.unlink(file, () => {});
+          resolve();
+        });
+      });
+
+    } catch (err) {
+      console.error('再生中エラー:', err);
+    }
+  }
+
+  isPlaying[guildId] = false;
+}
+//08.04
 
 
 
