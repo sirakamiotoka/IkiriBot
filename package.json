@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "deploy": "echo 'Your project is now live at https://your-app-name.up.railway.app'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,11 +16,13 @@
     "@discordjs/voice": "^0.18.0",
     "@google-cloud/text-to-speech": "^6.0.1",
     "@types/node": "^18.0.6",
-    "discord.js": "^14.8.0",
+    "axios": "^1.9.0",
+    "discord.js": "^14.19.3",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.2",
     "gtts": "^0.2.1",
-    "libsodium-wrappers": "^0.7.15",
-    "node-fetch": "^3.2.6"
+    "libsodium-wrappers": "^0.7.15"
   }
 }
