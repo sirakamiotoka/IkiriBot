@@ -5,7 +5,7 @@ const { StreamType } = require('@discordjs/voice');
 
 
 const express = require('express');
-const { Client, Events, GatewayIntentBits, SlashCommandBuilder } = require('discord.js');
+const { Client, Events, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
