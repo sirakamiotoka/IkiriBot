@@ -8,6 +8,7 @@
     "deploy": "echo 'Your project is now live at https://your-app-name.up.railway.app'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  
   "keywords": [],
   "author": "",
   "license": "ISC",
