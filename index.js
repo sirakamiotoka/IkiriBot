@@ -4,7 +4,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const { StreamType } = require('@discordjs/voice');
 
 const express = require('express');
-const { Client, Events, GatewayIntentBits } = require('discord.js');
+const { Client, Events, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 const fs = require('fs');
 const path = require('path');
@@ -30,7 +30,8 @@ let nameMappings = {};
 let speakUserName = {}; //07.24
 const lastSpeakerInfo = {}; 
 // const speechSpeed = {}; //07.29
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');//08.04
+
+//08.04↓
 // 定義したいスラッシュコマンド一覧
 
 const ikCommands = [
