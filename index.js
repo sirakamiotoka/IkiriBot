@@ -30,6 +30,100 @@ let nameMappings = {};
 let speakUserName = {}; //07.24
 const lastSpeakerInfo = {}; 
 // const speechSpeed = {}; //07.29
+const { REST, Routes, SlashCommandBuilder, Events } = require('discord.js');//08.04
+// 定義したいスラッシュコマンド一覧
+
+const ikCommands = [
+  new SlashCommandBuilder()
+    .setName('ik.join')
+    .setDescription('VCにぶち込みます。'),
+
+  new SlashCommandBuilder()
+    .setName('ik.kill')
+    .setDescription('この世のしがらみから解放してあげます。'),
+
+  new SlashCommandBuilder()
+    .setName('ik.absolutekill')
+    .setDescription('管理者専用: 強制切断します。'),
+
+  new SlashCommandBuilder()
+    .setName('ik.namespeak')
+    .setDescription('名前読み上げの切替を命じます。')
+    .addStringOption(option =>
+      option.setName('mode')
+        .setDescription('on または off')
+        .setRequired(true)
+        .addChoices(
+          { name: 'on', value: 'on' },
+          { name: 'off', value: 'off' }
+        )
+    ),
+
+  new SlashCommandBuilder()
+    .setName('ik.addword')
+    .setDescription('読み間違えてる部分を変えてあげます')
+    .addStringOption(option =>
+      option.setName('誤読み')
+        .setDescription('Botが誤読する名前')
+        .setRequired(true))
+    .addStringOption(option =>
+      option.setName('正しい読み')
+        .setDescription('正しい読み方')
+        .setRequired(true)),
+
+  new SlashCommandBuilder()
+    .setName('ik.removeword')
+    .setDescription('誤読修正単語をバラバラにします')
+    .addStringOption(option =>
+      option.setName('誤読み')
+        .setDescription('削除する名前')
+        .setRequired(true)),
+
+  new SlashCommandBuilder()
+    .setName('ik.wordlist')
+    .setDescription('登録されている誤読修正一覧を表示します'),
+
+  new SlashCommandBuilder()
+    .setName('ik.help')
+    .setDescription('ワンチャン助けを乞います'),
+
+  new SlashCommandBuilder()
+    .setName('ik.stcheck')
+    .setDescription('一応状態確認してあげます。')
+].map(cmd => cmd.toJSON());
+
+client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === 'ik.commandset') {
+    const guildId = interaction.guildId;
+    if (!guildId) {
+      await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
+      return;
+    }
+
+    const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+
+    try {
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+        { body: ikCommands }
+      );
+
+      await interaction.reply({
+        content: `このサーバー（${interaction.guild.name}）にコマンドを登録してあげましたわｗ数秒後に使えるようになりますわ。`,
+        ephemeral: true
+      });
+    } catch (err) {
+      console.error('スラッシュコマンド登録エラー:', err);
+      await interaction.reply({
+        content: '登録中にエラーが発生しましたわ。',
+        ephemeral: true
+      });
+    }
+  }
+});
+
 
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
