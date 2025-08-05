@@ -415,7 +415,7 @@ client.on(Events.MessageCreate, async message => {
   }
 /*
 07.28コメントアウト
-  if (content === '/ik.kill') {
+  if (content === '/ik-kill') {
     if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
       leaveVC(guildId, 'は？何してくれやがりますの？');
     } else {
@@ -425,7 +425,7 @@ client.on(Events.MessageCreate, async message => {
   }
 */
   // 修正後
-if (content === '/ik.kill') {
+if (content === '/ik-kill') {
   const botVC = message.guild.members.me?.voice?.channelId;
   const userVC = message.member.voice?.channelId;
 
@@ -441,7 +441,7 @@ if (content === '/ik.kill') {
   return;
 }
   
-  if (content === '/ik.absolutekill') {
+  if (content === '/ik-absolutekill') {
     const allowedUserId = '1289133629972418613';
     if (message.author.id === allowedUserId) {
       if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
@@ -455,7 +455,7 @@ if (content === '/ik.kill') {
     return;
   }
 
-  if (content === '/ik.join') {
+  if (content === '/ik-join') {
     if (voiceConnections[guildId]) {
       message.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
       return;
@@ -474,12 +474,12 @@ if (content === '/ik.kill') {
     return;
   }
 
-  if (content === '/ik.help') {
+  if (content === '/ik-help') {
     message.reply('いやですわwざまぁww少しは自分でなんとかしたらどうですの？w');
     return;
   }
 
-  if (content === '/ik.stcheck') {
+  if (content === '/ik-stcheck') {
     if (voiceConnections[guildId] && voiceConnections[guildId].state) {
       message.reply('voiceConnectionsの今の状態は ' + voiceConnections[guildId].state.status + ' ですわ');
       message.reply('activeChannelsの今の状態は ' + activeChannels[guildId] + ' ですわ');
@@ -489,13 +489,13 @@ if (content === '/ik.kill') {
     return;
   }
 
-  if (content === '/ik.w') {
+  if (content === '/ik-w') {
     message.reply('何わらってやがりますの？くたばってくださいませｗ');
     return;
   }
 
   //08.05
-  if (content === '/ik.commandset') {
+  if (content === '/ik-commandset') {
   if (!guildId) {
     message.reply('このコマンドはサーバー内でのみ使えますわ。');
     return;
@@ -517,7 +517,7 @@ if (content === '/ik.kill') {
   return;
 }//08.05　
 
-  if (content.startsWith('/ik.addword')) {
+  if (content.startsWith('/ik-addword')) {
     const args = content.split(' ').slice(1);
     if (args.length === 2) {
       const [incorrectName, correctReading] = args;
@@ -528,12 +528,12 @@ if (content === '/ik.kill') {
         message.reply(`新しいの登録してやりました、感謝してくださいまし: ${incorrectName} → ${correctReading}`);
       }
     } else {
-      message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik.addword 白神 しらかみ');
+      message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik-addword 白神 しらかみ');
     }
     return;
   }
 
-  if (content.startsWith('/ik.removeword')) {
+  if (content.startsWith('/ik-removeword')) {
     const args = content.split(' ').slice(1);
     if (args.length === 1) {
       const [incorrectName] = args;
@@ -544,12 +544,12 @@ if (content === '/ik.kill') {
         message.reply(`${incorrectName} が登録されてないですわね。いい加減にしてくださいませ`);
       }
     } else {
-      message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik.removeword 白神');
+      message.reply('正しいコマンドすら入力できないのですか？ｗ　お手本: /ik-removeword 白神');
     }
     return;
   }
 
-  if (content === '/ik.wordlist') {
+  if (content === '/ik-wordlist') {
     const mappings = nameMappings[guildId];
     if (Object.keys(mappings).length === 0) {
       message.reply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
@@ -562,30 +562,30 @@ if (content === '/ik.kill') {
     return;
   }
 // 07.24追加
-  if (content === '/ik.namespeak on') {
+  if (content === '/ik-namespeak on') {
   speakUserName[guildId] = true;
   message.reply('名前も呼んであげますわ。光栄に思いなさいｗ');
   return;
 }
 
-if (content === '/ik.namespeak off') {
+if (content === '/ik-namespeak off') {
   speakUserName[guildId] = false;
   message.reply('もう名前は呼んであげませんわw');
   return;
 }
 
-   if (content.startsWith('/ik.namespeak')) {
-    message.reply('正しいコマンドすら入力できないのですか？ｗ お手本: `/ik.namespeak on` または `/ik.namespeak off`');
+   if (content.startsWith('/ik-namespeak')) {
+    message.reply('正しいコマンドすら入力できないのですか？ｗ お手本: `/ik-namespeak on` または `/ik-namespeak off`');
     return;
   }
 // 07.24追加終了
 
   /*
 // 07.29追加
-  if (content.startsWith('/ik.speed')) {
+  if (content.startsWith('/ik-speed')) {
   const args = content.split(' ').slice(1);
   if (args.length !== 1) {
-    message.reply(' `/ik.speed 1.0` のように入力してくださいましｗ');
+    message.reply(' `/ik-speed 1.0` のように入力してくださいましｗ');
     return;
   }
 
