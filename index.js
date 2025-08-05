@@ -504,6 +504,8 @@ client.on(Events.MessageCreate, async message => {
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
+    nameMappings[guildId]['～'] = 'から';
+    nameMappings[guildId]['~'] = 'から';
   }
 /*
 07.28コメントアウト
