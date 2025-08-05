@@ -412,7 +412,6 @@ client.once(Events.ClientReady, c => {
       if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
         if (botVC && userVC?.id === botVC) {
           leaveVC(guildId, 'は？何してくれやがりますの？');
-          await interaction.reply('切断してやりましたわｗ');
         } else {
           await interaction.reply('同じVCにいない君には命令権限はありませんわｗｗ');
         }
@@ -428,7 +427,6 @@ client.once(Events.ClientReady, c => {
       }
       if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
         leaveVC(guildId, 'は？強制切断されましたわ。');
-        await interaction.reply('強制で切ってやりましたわ。');
       } else {
         await interaction.reply('今はどこにも繋がっていませんわ。');
       }
