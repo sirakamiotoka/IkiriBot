@@ -161,7 +161,7 @@ function convertToPCMStream(mp3Path) {
     '-f', 's16le',
     '-ar', '48000',
     '-ac', '2',
-    '-af', 'atempo=1.3',
+    '-af', 'atempo=1.35',
     'pipe:1'
   ]);
 
