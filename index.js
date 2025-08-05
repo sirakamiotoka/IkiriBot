@@ -509,20 +509,20 @@ if (content === '/ik.kill') {
   }
 
   const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+
   try {
     await rest.put(
       Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
       { body: ikCommands }
     );
 
-    message.reply(`このサーバー（${message.guild.name}）にコマンドを登録してあげましたわｗ`);
-    return;
+    message.reply(`このサーバー（${message.guild.name}）にコマンドを登録してあげましたわｗ\n数秒後に使えるようになりますわ。`);
   } catch (err) {
     console.error('スラッシュコマンド登録エラー:', err);
     message.reply('登録中にエラーが発生しましたわ。');
-    return;
   }
-}//08.05
+  return;
+}//08.05　
 
   if (content.startsWith('/ik.addword')) {
     const args = content.split(' ').slice(1);
