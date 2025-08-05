@@ -31,7 +31,7 @@ let speakUserName = {}; //07.24
 const lastSpeakerInfo = {}; 
 // const speechSpeed = {}; //07.29
 
-
+/* 08.05
 client.once(Events.ClientReady, async () => {
   console.log(`Logged in as ${client.user.tag}`);
   const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
@@ -45,6 +45,7 @@ client.once(Events.ClientReady, async () => {
     console.error('Slash command registration failed:', err);
   }
 });
+*/
 //08.04↓
 // 定義したいスラッシュコマンド一覧
 
