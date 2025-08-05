@@ -497,7 +497,7 @@ if (content === '/ik.kill') {
   }
 
   if (content === '/ik.w') {
-    message.reply('何わろとんねんくたばってくださいませ');
+    message.reply('何わらってやがりますの？くたばってくださいませｗ');
     return;
   }
 
