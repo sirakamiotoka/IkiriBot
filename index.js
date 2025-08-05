@@ -704,13 +704,12 @@ if (content === '/ik.namespeak off') {
     !content.startsWith('/')
   ) {
     //08.05
-    if (message.attachments.size > 0) {
-  const attachmentNames = message.attachments.map(att => att.name).join('、');
-  content += ` 添付ファイル：${attachmentNames}`;
-}
+    
     let text = await sanitizeText(content, message.guild); // ← 修正ポイント
     text = replaceDotWithTen(text);  // 08.05
-
+　　if (message.attachments.size > 0) {
+  　text += ` 添付ファイル`;
+　　}
     text = correctNamePronunciation(text, guildId);// 08.05
 text = shortenText(text);// 08.05
     if (text.length === 0) return;
