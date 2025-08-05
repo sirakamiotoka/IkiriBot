@@ -145,7 +145,16 @@ async function sanitizeText(text, guild) {
 function shortenText(text, limit = 70) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
 }
+function numToKanji(numStr) {
+  const map = { '0':'ぜろ','1':'いち','2':'に','3':'さん','4':'よん','5':'ご','6':'ろく','7':'なな','8':'はち','9':'きゅう' };
+  return numStr.split('').map(d => map[d] || d).join('');
+}
 
+function replaceDotWithTen(text) {
+  return text.replace(/(\d+)\.(\d+)/g, (_, intPart, decimalPart) => {
+    return `${numToKanji(intPart)}てん${numToKanji(decimalPart)}`;
+  });
+}
 // gTTSで音声生成
 async function speakText(text, lang = 'ja', filepath) {
   return new Promise((resolve, reject) => {
@@ -480,32 +489,25 @@ if (content === '/ik.kill') {
 
   //08.05
   if (content === '/ik.commandset') {
-    
-    if (!guildId) {
-      await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
-      return;
-    }
+  if (!guildId) {
+    message.reply('このコマンドはサーバー内でのみ使えますわ。');
+    return;
+  }
 
-    const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
-    try {
-      await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
-        { body: ikCommands }
-      );
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+      { body: ikCommands }
+    );
 
-      await interaction.reply({
-        content: `このサーバー（${interaction.guild.name}）にコマンドを登録してあげましたわｗ数秒後に使えるようになりますわ。`,
-        ephemeral: true
-      });
-    } catch (err) {
-      console.error('スラッシュコマンド登録エラー:', err);
-      await interaction.reply({
-        content: '登録中にエラーが発生しましたわ。',
-        ephemeral: true
-      });
-    }
-  }//08.05
+    message.reply(`このサーバー（${interaction.guild.name}）にコマンドを登録してあげましたわｗ\n数秒後に使えるようになりますわ。`);
+  } catch (err) {
+    console.error('スラッシュコマンド登録エラー:', err);
+    message.reply('登録中にエラーが発生しましたわ。');
+  }
+}//08.05
 
   if (content.startsWith('/ik.addword')) {
     const args = content.split(' ').slice(1);
@@ -591,6 +593,7 @@ if (content === '/ik.namespeak off') {
 }
   // 07.29追加終了
   */
+  
   //  通常メッセージ読み上げ
   if (
     voiceConnections[guildId] &&
@@ -598,7 +601,12 @@ if (content === '/ik.namespeak off') {
     !content.startsWith('/')
   ) {
     let text = await sanitizeText(content, message.guild); // ← 修正ポイント
+    text = replaceDotWithTen(text);  // 08.05
+
+    text = correctNamePronunciation(text, guildId);// 08.05
+text = shortenText(text);// 08.05
     if (text.length === 0) return;
+    
 /* 
 07.28修正
     if (speakUserName[guildId]) {
