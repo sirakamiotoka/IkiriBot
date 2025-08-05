@@ -429,7 +429,8 @@ client.once(Events.ClientReady, c => {
         return;
       }
       if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-        leaveVC(guildId, 'は？強制切断されましたわ。');
+        await interaction.reply('は？強制切断されましたわ。');
+          leaveVC(guildId, '');
       } else {
         await interaction.reply('今はどこにも繋がっていませんわ。');
       }
