@@ -58,10 +58,6 @@ const ikCommands = [
     .setDescription('この世のしがらみから解放してあげます。'),
 
   new SlashCommandBuilder()
-    .setName('ik-absolutekill')
-    .setDescription('管理者専用: 強制切断します。'),
-
-  new SlashCommandBuilder()
     .setName('ik-namespeak')
     .setDescription('名前読み上げの切替を命じます。')
     .addStringOption(option =>
@@ -88,7 +84,7 @@ const ikCommands = [
 
   new SlashCommandBuilder()
     .setName('ik-removeword')
-    .setDescription('誤読修正単語をバラバラにします')
+    .setDescription('誤読修正単語を木端微塵にします')
     .addStringOption(option =>
       option.setName('誤読み')
         .setDescription('削除する名前')
@@ -102,9 +98,6 @@ const ikCommands = [
     .setName('ik-help')
     .setDescription('助けを乞います'),
 
-  new SlashCommandBuilder()
-    .setName('ik-stcheck')
-    .setDescription('一応状態確認してあげます。')
 ].map(cmd => cmd.toJSON());
 
 /*client.on(Events.InteractionCreate, async interaction => {
