@@ -113,7 +113,7 @@ async function sanitizeText(text, guild) {
     return member ? `指名、${member.displayName}、` : '誰か';
   });
 
-  text = text.replace(/[〜～]/g, 'から');
+  text = text.replace(/[〜～~]/g, 'から');
   return text
     .replace(/<a?:\w+:\d+>/g, '')
     .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる')
