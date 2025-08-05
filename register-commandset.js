@@ -12,7 +12,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
   try {
     console.log('コマンドを登録中 (/ik.commandset)...');
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
       { body: commands }
     );
     console.log('登録完了 (/ik.commandset)');
