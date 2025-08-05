@@ -36,19 +36,19 @@ const lastSpeakerInfo = {};
 
 const ikCommands = [
   new SlashCommandBuilder()
-    .setName('ik.join')
+    .setName('ik-join')
     .setDescription('VCにぶち込みます。'),
 
   new SlashCommandBuilder()
-    .setName('ik.kill')
+    .setName('ik-kill')
     .setDescription('この世のしがらみから解放してあげます。'),
 
   new SlashCommandBuilder()
-    .setName('ik.absolutekill')
+    .setName('ik-absolutekill')
     .setDescription('管理者専用: 強制切断します。'),
 
   new SlashCommandBuilder()
-    .setName('ik.namespeak')
+    .setName('ik-namespeak')
     .setDescription('名前読み上げの切替を命じます。')
     .addStringOption(option =>
       option.setName('mode')
@@ -61,7 +61,7 @@ const ikCommands = [
     ),
 
   new SlashCommandBuilder()
-    .setName('ik.addword')
+    .setName('ik-addword')
     .setDescription('読み間違えてる部分を変えてあげます')
     .addStringOption(option =>
       option.setName('誤読み')
@@ -73,7 +73,7 @@ const ikCommands = [
         .setRequired(true)),
 
   new SlashCommandBuilder()
-    .setName('ik.removeword')
+    .setName('ik-removeword')
     .setDescription('誤読修正単語をバラバラにします')
     .addStringOption(option =>
       option.setName('誤読み')
@@ -81,15 +81,15 @@ const ikCommands = [
         .setRequired(true)),
 
   new SlashCommandBuilder()
-    .setName('ik.wordlist')
+    .setName('ik-wordlist')
     .setDescription('登録されている誤読修正一覧を表示します'),
 
   new SlashCommandBuilder()
-    .setName('ik.help')
-    .setDescription('ワンチャン助けを乞います'),
+    .setName('ik-help')
+    .setDescription('助けを乞います'),
 
   new SlashCommandBuilder()
-    .setName('ik.stcheck')
+    .setName('ik-stcheck')
     .setDescription('一応状態確認してあげます。')
 ].map(cmd => cmd.toJSON());
 
