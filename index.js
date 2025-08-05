@@ -411,7 +411,8 @@ client.once(Events.ClientReady, c => {
     case 'ik-kill':
       if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
         if (botVC && userVC?.id === botVC) {
-          leaveVC(guildId, 'は？何してくれやがりますの？');
+          await interaction.reply('は？何してくれやがりますの？');
+          leaveVC(guildId, '');
         } else {
           await interaction.reply('同じVCにいない君には命令権限はありませんわｗｗ');
         }
