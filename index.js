@@ -75,11 +75,11 @@ const ikCommands = [
     .setName('ik-addword')
     .setDescription('読み間違えてる部分を変えてあげます')
     .addStringOption(option =>
-      option.setName('誤読み')
-        .setDescription('Botが誤読する名前')
+      option.setName('incorrect')
+        .setDescription('Botが誤読してる読み方')
         .setRequired(true))
     .addStringOption(option =>
-      option.setName('正しい読み')
+      option.setName('correct')
         .setDescription('正しい読み方')
         .setRequired(true)),
 
