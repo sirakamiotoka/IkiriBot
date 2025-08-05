@@ -93,7 +93,7 @@ const ikCommands = [
     .setDescription('一応状態確認してあげます。')
 ].map(cmd => cmd.toJSON());
 
-client.on(Events.InteractionCreate, async interaction => {
+/*client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName === 'ik.commandset') {
@@ -123,7 +123,7 @@ client.on(Events.InteractionCreate, async interaction => {
       });
     }
   }
-});
+});*/
 
 
 // テキストのサニタイズ
