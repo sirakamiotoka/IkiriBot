@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  
+  "type": "commonjs",
   "scripts": {
     "start": "node index.js",
     "deploy": "echo 'Your project is now live at https://your-app-name.up.railway.app'",
