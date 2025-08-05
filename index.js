@@ -116,7 +116,7 @@ async function sanitizeText(text, guild) {
   return text
     .replace(/<a?:\w+:\d+>/g, '')
     .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる')
-    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n]/gu, '')
+    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n.]/gu, '')
     .trim();
 }
 
