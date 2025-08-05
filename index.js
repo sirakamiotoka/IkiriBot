@@ -479,7 +479,7 @@ if (content === '/ik.kill') {
   }
 
   //08.05
-  if (content === 'ik.commandset') {
+  if (content === '/ik.commandset') {
     
     if (!guildId) {
       await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
