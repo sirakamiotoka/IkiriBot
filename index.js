@@ -87,7 +87,7 @@ const ikCommands = [
     .setName('ik-removeword')
     .setDescription('誤読修正単語を木端微塵にします')
     .addStringOption(option =>
-      option.setName('誤読み')
+      option.setName('incorrect')
         .setDescription('削除する名前')
         .setRequired(true)),
 
