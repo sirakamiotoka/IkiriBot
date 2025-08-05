@@ -88,7 +88,7 @@ const ikCommands = [
     .setDescription('誤読修正単語を木端微塵にします')
     .addStringOption(option =>
       option.setName('incorrect')
-        .setDescription('木端微塵にする名前')
+        .setDescription('木端微塵にする読み方')
         .setRequired(true)),
 
   new SlashCommandBuilder()
