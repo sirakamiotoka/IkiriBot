@@ -703,6 +703,11 @@ if (content === '/ik.namespeak off') {
     message.channel.id === activeChannels[guildId] &&
     !content.startsWith('/')
   ) {
+    //08.05
+    if (message.attachments.size > 0) {
+  const attachmentNames = message.attachments.map(att => att.name).join('、');
+  content += ` 添付ファイル：${attachmentNames}`;
+}
     let text = await sanitizeText(content, message.guild); // ← 修正ポイント
     text = replaceDotWithTen(text);  // 08.05
 
