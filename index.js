@@ -478,6 +478,35 @@ if (content === '/ik.kill') {
     return;
   }
 
+  //08.05
+  if (content === 'ik.commandset') {
+    
+    if (!guildId) {
+      await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
+      return;
+    }
+
+    const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+
+    try {
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
+        { body: ikCommands }
+      );
+
+      await interaction.reply({
+        content: `このサーバー（${interaction.guild.name}）にコマンドを登録してあげましたわｗ数秒後に使えるようになりますわ。`,
+        ephemeral: true
+      });
+    } catch (err) {
+      console.error('スラッシュコマンド登録エラー:', err);
+      await interaction.reply({
+        content: '登録中にエラーが発生しましたわ。',
+        ephemeral: true
+      });
+    }
+  }//08.05
+
   if (content.startsWith('/ik.addword')) {
     const args = content.split(' ').slice(1);
     if (args.length === 2) {
