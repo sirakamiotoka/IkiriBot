@@ -516,9 +516,11 @@ if (content === '/ik.kill') {
     );
 
     message.reply(`このサーバー（${message.guild.name}）にコマンドを登録してあげましたわｗ`);
+    return;
   } catch (err) {
     console.error('スラッシュコマンド登録エラー:', err);
     message.reply('登録中にエラーが発生しましたわ。');
+    return;
   }
 }//08.05
 
