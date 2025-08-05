@@ -88,7 +88,7 @@ const ikCommands = [
     .setDescription('誤読修正単語を木端微塵にします')
     .addStringOption(option =>
       option.setName('incorrect')
-        .setDescription('削除する名前')
+        .setDescription('木端微塵にする名前')
         .setRequired(true)),
 
   new SlashCommandBuilder()
@@ -505,8 +505,6 @@ client.on(Events.MessageCreate, async message => {
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
-    nameMappings[guildId]['～'] = 'から';
-    nameMappings[guildId]['~'] = 'から';
   }
 /*
 07.28コメントアウト
