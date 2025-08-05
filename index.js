@@ -101,35 +101,6 @@ const ikCommands = [
 ].map(cmd => cmd.toJSON());
 
 /*client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  if (interaction.commandName === 'ik.commandset') {
-    const guildId = interaction.guildId;
-    if (!guildId) {
-      await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
-      return;
-    }
-
-    const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-
-    try {
-      await rest.put(
-        Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId),
-        { body: ikCommands }
-      );
-
-      await interaction.reply({
-        content: `このサーバー（${interaction.guild.name}）にコマンドを登録してあげましたわｗ数秒後に使えるようになりますわ。`,
-        ephemeral: true
-      });
-    } catch (err) {
-      console.error('スラッシュコマンド登録エラー:', err);
-      await interaction.reply({
-        content: '登録中にエラーが発生しましたわ。',
-        ephemeral: true
-      });
-    }
-  }
 });*/
 
 
@@ -400,6 +371,126 @@ client.once(Events.ClientReady, c => {
   console.log(`(${c.user.tag}) が起動しましたわ！`);
 });
 
+//08.05スラッシュコマンド
+  client.on(Events.InteractionCreate, async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName, guildId, guild, member } = interaction;
+
+  if (!guildId || !guild || !member) {
+    await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
+    return;
+  }
+
+  const userId = interaction.user.id;
+
+  const userVC = member.voice?.channel;
+  const botVC = guild.members.me?.voice?.channelId;
+
+  switch (commandName) {
+    case 'ik-join':
+      if (voiceConnections[guildId]) {
+        await interaction.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+        return;
+      }
+      if (!userVC) {
+        await interaction.reply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
+        return;
+      }
+      voiceConnections[guildId] = joinVoiceChannel({
+        channelId: userVC.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      });
+      activeChannels[guildId] = interaction.channelId;
+      await interaction.reply('入ってあげましたわ。');
+      break;
+
+    case 'ik-kill':
+      if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
+        if (botVC && userVC?.id === botVC) {
+          leaveVC(guildId, 'は？何してくれやがりますの？');
+          await interaction.reply('切断してやりましたわｗ');
+        } else {
+          await interaction.reply('同じVCにいない君には命令権限はありませんわｗｗ');
+        }
+      } else {
+        await interaction.reply('どこにも繋いでないですわねwざんねん！w');
+      }
+      break;
+
+    case 'ik-absolutekill':
+      if (userId !== '1289133629972418613') {
+        await interaction.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
+        return;
+      }
+      if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
+        leaveVC(guildId, 'は？強制切断されましたわ。');
+        await interaction.reply('強制で切ってやりましたわ。');
+      } else {
+        await interaction.reply('今はどこにも繋がっていませんわ。');
+      }
+      break;
+
+    case 'ik-stcheck':
+      if (voiceConnections[guildId]?.state) {
+        await interaction.reply(`voiceConnections: ${voiceConnections[guildId].state.status}\nactiveChannel: ${activeChannels[guildId]}`);
+      } else {
+        await interaction.reply('状態確認を拒否しますわ');
+      }
+      break;
+
+    case 'ik-namespeak':
+      const mode = interaction.options.getString('mode');
+      speakUserName[guildId] = (mode === 'on');
+      await interaction.reply(mode === 'on'
+        ? '名前も呼んであげますわ。光栄に思いなさいｗ'
+        : 'もう名前は呼んであげませんわw');
+      break;
+
+    case 'ik-addword':
+      const incorrect = interaction.options.getString('incorrect');
+      const correct = interaction.options.getString('correct');
+      if (!nameMappings[guildId]) nameMappings[guildId] = {};
+      if (nameMappings[guildId][incorrect]) {
+        await interaction.reply(`${incorrect} はすでに登録されてますわボケ。`);
+      } else {
+        nameMappings[guildId][incorrect] = correct;
+        await interaction.reply(`新しいの登録してやりました、感謝してくださいまし: ${incorrect} → ${correct}`);
+      }
+      break;
+
+    case 'ik-removeword':
+      const toRemove = interaction.options.getString('incorrect');
+      if (nameMappings[guildId]?.[toRemove]) {
+        delete nameMappings[guildId][toRemove];
+        await interaction.reply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
+      } else {
+        await interaction.reply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
+      }
+      break;
+
+    case 'ik-wordlist':
+      const mappings = nameMappings[guildId];
+      if (!mappings || Object.keys(mappings).length === 0) {
+        await interaction.reply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
+      } else {
+        const list = Object.entries(mappings)
+          .map(([k, v]) => `${k} → ${v}`)
+          .join('\n');
+        await interaction.reply(`単語リスト:\n${list}`);
+      }
+      break;
+
+    default:
+      await interaction.reply('そのコマンドには対応しておりませんわ。');
+      break;
+  }
+});
+
+
+  //08.05end
+
 // メッセージ処理
 client.on(Events.MessageCreate, async message => {
   
@@ -603,125 +694,7 @@ if (content === '/ik.namespeak off') {
   */
 
 
-//08.05スラッシュコマンド
-  client.on(Events.InteractionCreate, async interaction => {
-  if (!interaction.isChatInputCommand()) return;
 
-  const { commandName, guildId, guild, member } = interaction;
-
-  if (!guildId || !guild || !member) {
-    await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
-    return;
-  }
-
-  const userId = interaction.user.id;
-
-  const userVC = member.voice?.channel;
-  const botVC = guild.members.me?.voice?.channelId;
-
-  switch (commandName) {
-    case 'ik-join':
-      if (voiceConnections[guildId]) {
-        await interaction.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-        return;
-      }
-      if (!userVC) {
-        await interaction.reply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-        return;
-      }
-      voiceConnections[guildId] = joinVoiceChannel({
-        channelId: userVC.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-      });
-      activeChannels[guildId] = interaction.channelId;
-      await interaction.reply('入ってあげましたわ。');
-      break;
-
-    case 'ik-kill':
-      if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-        if (botVC && userVC?.id === botVC) {
-          leaveVC(guildId, 'は？何してくれやがりますの？');
-          await interaction.reply('切断してやりましたわｗ');
-        } else {
-          await interaction.reply('同じVCにいない君には命令権限はありませんわｗｗ');
-        }
-      } else {
-        await interaction.reply('どこにも繋いでないですわねwざんねん！w');
-      }
-      break;
-
-    case 'ik-absolutekill':
-      if (userId !== '1289133629972418613') {
-        await interaction.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
-        return;
-      }
-      if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-        leaveVC(guildId, 'は？強制切断されましたわ。');
-        await interaction.reply('強制で切ってやりましたわ。');
-      } else {
-        await interaction.reply('今はどこにも繋がっていませんわ。');
-      }
-      break;
-
-    case 'ik-stcheck':
-      if (voiceConnections[guildId]?.state) {
-        await interaction.reply(`voiceConnections: ${voiceConnections[guildId].state.status}\nactiveChannel: ${activeChannels[guildId]}`);
-      } else {
-        await interaction.reply('状態確認を拒否しますわ');
-      }
-      break;
-
-    case 'ik-namespeak':
-      const mode = interaction.options.getString('mode');
-      speakUserName[guildId] = (mode === 'on');
-      await interaction.reply(mode === 'on'
-        ? '名前も呼んであげますわ。光栄に思いなさいｗ'
-        : 'もう名前は呼んであげませんわw');
-      break;
-
-    case 'ik-addword':
-      const incorrect = interaction.options.getString('incorrect');
-      const correct = interaction.options.getString('correct');
-      if (!nameMappings[guildId]) nameMappings[guildId] = {};
-      if (nameMappings[guildId][incorrect]) {
-        await interaction.reply(`${incorrect} はすでに登録されてますわボケ。`);
-      } else {
-        nameMappings[guildId][incorrect] = correct;
-        await interaction.reply(`新しいの登録してやりました、感謝してくださいまし: ${incorrect} → ${correct}`);
-      }
-      break;
-
-    case 'ik-removeword':
-      const toRemove = interaction.options.getString('incorrect');
-      if (nameMappings[guildId]?.[toRemove]) {
-        delete nameMappings[guildId][toRemove];
-        await interaction.reply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
-      } else {
-        await interaction.reply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
-      }
-      break;
-
-    case 'ik-wordlist':
-      const mappings = nameMappings[guildId];
-      if (!mappings || Object.keys(mappings).length === 0) {
-        await interaction.reply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
-      } else {
-        const list = Object.entries(mappings)
-          .map(([k, v]) => `${k} → ${v}`)
-          .join('\n');
-        await interaction.reply(`単語リスト:\n${list}`);
-      }
-      break;
-
-    default:
-      await interaction.reply('そのコマンドには対応しておりませんわ。');
-      break;
-  }
-});
-
-
-  //08.05end
   
   //  通常メッセージ読み上げ
   if (
