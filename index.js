@@ -349,7 +349,9 @@ function leaveVC(guildId, reasonText = '切断されましたわ。') {
   if (activeChannels[guildId]) {
     const textChannel = client.channels.cache.get(activeChannels[guildId]);
     if (textChannel && textChannel.isTextBased()) {
+      if (reasonText!=='') {
       textChannel.send(reasonText);
+      }
     }
     activeChannels[guildId] = null;
   }
