@@ -409,7 +409,7 @@ client.once(Events.ClientReady, c => {
       });
 
       try {
-  await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
+  await entersState(voiceConnections[guildId], VoiceConnectionStatus.Ready, 15_000);
   console.log('VCに正常に接続されました。');
 
   activeChannels[guildId] = interaction.channelId;
