@@ -393,25 +393,26 @@ client.once(Events.ClientReady, c => {
 
   switch (commandName) {
     case 'ik-join':
-      //await interaction.deferReply();
-      if (voiceConnections[guildId]) {
-        await interaction.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-        return;
-      }
-      if (!userVC) {
-        await interaction.reply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-        return;
-      }
-      voiceConnections[guildId] = joinVoiceChannel({
-        channelId: userVC.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-      });
+  await interaction.deferReply(); //08.13 追加
 
-     
-      activeChannels[guildId] = interaction.channelId;
-      await interaction.reply('入ってあげましたわ。');
-      break;
+  if (voiceConnections[guildId]) {
+    await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+    return;
+  }
+  if (!userVC) {
+    await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
+    return;
+  }
+
+  voiceConnections[guildId] = joinVoiceChannel({
+    channelId: userVC.id,
+    guildId: guild.id,
+    adapterCreator: guild.voiceAdapterCreator,
+  });
+
+  activeChannels[guildId] = interaction.channelId;
+  await interaction.editReply('入ってあげましたわ。'); //editReplyに変更 08.13
+  break;
 
     case 'ik-kill':
       if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
