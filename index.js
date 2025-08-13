@@ -95,9 +95,9 @@ const ikCommands = [
     .setName('ik-wordlist')
     .setDescription('登録されている誤読修正一覧を表示します'),
 
-  new SlashCommandBuilder()
-    .setName('ik-help')
-    .setDescription('助けを乞います'),
+//  new SlashCommandBuilder()
+//    .setName('ik-help')
+//    .setDescription('助けを乞います'),
 
 ].map(cmd => cmd.toJSON());
 
@@ -393,6 +393,7 @@ client.once(Events.ClientReady, c => {
 
   switch (commandName) {
     case 'ik-join':
+      await interaction.deferReply();
       if (voiceConnections[guildId]) {
         await interaction.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
         return;
@@ -501,6 +502,11 @@ client.once(Events.ClientReady, c => {
           .join('\n');
         await interaction.reply(`単語リスト:\n${list}`);
       }
+      break;
+
+    case 'ik-help':
+        await interaction.reply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
+        
       break;
 
     default:
