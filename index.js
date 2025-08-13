@@ -279,13 +279,13 @@ async function playNextInQueue(guildId) {
     const { text, file } = audioQueue[guildId].shift();
 
     try {
-      // ❶ gTTSを非同期生成
+      // gTTSを非同期生成
       await speakText(text, 'ja', file);
 
-      // ❷ ffmpegをパイプで変換
+      // ffmpegをパイプで変換
       const stream = convertToPCMStream(file);
-
-      // ❸ Discordで再生
+      
+      // Discordで再生
       const player = createAudioPlayer();
       const resource = createAudioResource(stream, {
         inputType: StreamType.Raw,
