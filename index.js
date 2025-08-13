@@ -422,7 +422,7 @@ client.once(Events.ClientReady, c => {
 */
 } catch (err) {
   console.error('接続がReady状態になりませんでした:', err);
-  connection.destroy();
+  voiceConnections[guildId].destroy(); 
   await interaction.reply('VCにうまく接続できませんでしたわ。');
 }
       
