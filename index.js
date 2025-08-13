@@ -393,7 +393,7 @@ client.once(Events.ClientReady, c => {
 
   switch (commandName) {
     case 'ik-join':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       if (voiceConnections[guildId]) {
         await interaction.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
         return;
