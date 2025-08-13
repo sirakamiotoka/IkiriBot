@@ -406,8 +406,25 @@ client.once(Events.ClientReady, c => {
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
       });
-      activeChannels[guildId] = interaction.channelId;
-      await interaction.reply('入ってあげましたわ。');
+
+      try {
+  await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
+  console.log('VCに正常に接続されました。');
+
+  activeChannels[guildId] = interaction.channelId;
+  await interaction.reply('入ってあげましたわ。');
+  /*const player = createAudioPlayer();
+  connection.subscribe(player);
+
+  const resource = createAudioResource(fs.createReadStream(audioPath));
+  player.play(resource);
+*/
+} catch (err) {
+  console.error('接続がReady状態になりませんでした:', err);
+  connection.destroy();
+  await interaction.reply('VCにうまく接続できませんでしたわ。');
+}
+      
       break;
 
     case 'ik-kill':
