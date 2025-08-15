@@ -521,7 +521,7 @@ switch (commandName) {
     await interaction.editReply('そのコマンドには対応しておりませんわ。');
     break;
 }
-
+});
 
 
   //08.05end
