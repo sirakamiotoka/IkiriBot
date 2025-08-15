@@ -25,8 +25,4 @@ RUN npm install pm2 -g
 # ソースコードをすべてコピー
 COPY . .
 
-# ポートを開ける（Expressを使っているため）
-EXPOSE 3000
-
-# pm2-runtimeでnpm startを監視して起動（落ちたら自動再起動）
-CMD ["pm2-runtime", "start", "npm", "--", "start"]
+CMD ["npm", "start"]
