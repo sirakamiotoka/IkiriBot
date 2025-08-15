@@ -29,4 +29,4 @@ COPY . .
 EXPOSE 3000
 
 # pm2-runtimeでnpm startを監視して起動（落ちたら自動再起動）
-CMD ["pm2-runtime", "start", "npm", "--", "start"]
+CMD ["node", "index.js"]
