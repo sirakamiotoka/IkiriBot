@@ -19,11 +19,14 @@ COPY package*.json ./
 # 依存関係をインストール
 RUN npm install
 
+# pm2をグローバルインストール（プロセスマネージャ）
+RUN npm install pm2 -g
+
 # ソースコードをすべてコピー
 COPY . .
 
 # ポートを開ける（Expressを使っているため）
 EXPOSE 3000
 
-# アプリケーションを起動するコマンドを指定
-CMD ["npm", "start"]
+# pm2-runtimeでnpm startを監視して起動（落ちたら自動再起動）
+CMD ["pm2-runtime", "start", "npm", "--", "start"]
