@@ -404,6 +404,7 @@ client.once(Events.ClientReady, c => {
     return;
   }
 
+  try {
   voiceConnections[guildId] = joinVoiceChannel({
     channelId: userVC.id,
     guildId: guild.id,
@@ -411,7 +412,11 @@ client.once(Events.ClientReady, c => {
   });
 
   activeChannels[guildId] = interaction.channelId;
-  await interaction.editReply('入ってあげましたわ。'); //editReplyに変更 08.13
+  await interaction.editReply('入ってあげましたわ。');
+} catch (err) {
+  console.error('VC参加失敗:', err);
+  await interaction.editReply('VCへの参加に失敗しましたわ。');
+}
   break;
 
     case 'ik-kill':
@@ -604,7 +609,30 @@ if (content === '/ik.kill') {
     message.reply('このコマンドはサーバー内でのみ使えますわ。');
     return;
   }
+    
+if (content === '/ik.commandremove') {
+  if (!guildId) {
+    message.reply('このコマンドはサーバー内でのみ使えますわ。');
+    return;
+  }
 
+  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+  const CLIENT_ID = client.application.id;
+
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands(CLIENT_ID, guildId),
+      { body: [] } // ← コマンドリストを空にする
+    );
+
+    message.reply(`このサーバー（${message.guild.name}）のコマンドを全部消し飛ばして差し上げましたわｗ`);
+  } catch (err) {
+    console.error('スラッシュコマンド削除エラー:', err);
+    message.reply('削除中にエラーが発生しましたわ。');
+  }
+
+  return;
+}
   const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 　const CLIENT_ID = client.application.id;
   try {
