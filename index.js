@@ -376,54 +376,43 @@ client.once(Events.ClientReady, c => {
 });
 
 //08.05スラッシュコマンド
-client.on(Events.InteractionCreate, async interaction => {
+  client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName, guildId, guild, member } = interaction;
 
   if (!guildId || !guild || !member) {
-    await interaction.reply({
-      content: 'このコマンドはサーバー内でのみ使えますわ。',
-      ephemeral: true
-    });
+    await interaction.reply({ content: 'このコマンドはサーバー内でのみ使えますわ。', ephemeral: true });
     return;
   }
 
   const userId = interaction.user.id;
+
   const userVC = member.voice?.channel;
   const botVC = guild.members.me?.voice?.channelId;
 
-  // ★ タイムアウト監視用タイマーをセット（3秒）
-  const timeoutId = setTimeout(() => {
-    console.error(`[${guildId}] スラッシュコマンド応答が3秒以内に返されませんでした。プロセスを終了します。`);
-    process.exit(1);
-  }, 3000);
+  switch (commandName) {
+    case 'ik-join':
+  await interaction.deferReply(); //08.13 追加
 
-  try {
-    switch (commandName) {
-      case 'ik-join':
-        await interaction.deferReply(); // ★ deferReply を3秒以内に実行しないとタイムアウト
-        clearTimeout(timeoutId); // ★ タイマー解除（応答成功）
+  if (voiceConnections[guildId]) {
+    await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+    return;
+  }
+  if (!userVC) {
+    await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
+    return;
+  }
 
-        if (voiceConnections[guildId]) {
-          await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-          return;
-        }
+  voiceConnections[guildId] = joinVoiceChannel({
+    channelId: userVC.id,
+    guildId: guild.id,
+    adapterCreator: guild.voiceAdapterCreator,
+  });
 
-        if (!userVC) {
-          await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-          return;
-        }
-
-        voiceConnections[guildId] = joinVoiceChannel({
-          channelId: userVC.id,
-          guildId: guild.id,
-          adapterCreator: guild.voiceAdapterCreator,
-        });
-
-        activeChannels[guildId] = interaction.channelId;
-        await interaction.editReply('入ってあげましたわ。');
-        break;
+  activeChannels[guildId] = interaction.channelId;
+  await interaction.editReply('入ってあげましたわ。'); //editReplyに変更 08.13
+  break;
 
     case 'ik-kill':
       if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
@@ -506,28 +495,9 @@ client.on(Events.InteractionCreate, async interaction => {
         
       break;
 
-     default:
-        clearTimeout(timeoutId);
-        await interaction.reply('そのコマンドには対応しておりませんわ。');
-        break;
-    }
-  } catch (err) {
-    clearTimeout(timeoutId); // ★ エラー時もタイマー解除
-    console.error(`[${guildId}] コマンド処理中にエラー発生:`, err);
-
-    try {
-      if (!interaction.replied) {
-        await interaction.reply({
-          content: 'コマンド実行中にエラーが発生しましたわ。',
-          ephemeral: true
-        });
-      }
-    } catch (replyErr) {
-      console.error(`[${guildId}] エラー応答にも失敗:`, replyErr);
-    }
-
-    // ★ プロセスを終了して監視ツールなどで自動再起動させる
-    process.exit(1);
+    default:
+      await interaction.reply('そのコマンドには対応しておりませんわ。');
+      break;
   }
 });
 
