@@ -391,120 +391,137 @@ client.once(Events.ClientReady, c => {
   const userVC = member.voice?.channel;
   const botVC = guild.members.me?.voice?.channelId;
 
-  switch (commandName) {
-    case 'ik-join':
-  await interaction.deferReply(); //08.13 追加
+switch (commandName) {
+  case 'ik-join':
+    await interaction.deferReply();
 
-  if (voiceConnections[guildId]) {
-    await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-    return;
-  }
-  if (!userVC) {
-    await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-    return;
-  }
+    if (voiceConnections[guildId]) {
+      await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+      return;
+    }
 
-  try {
-  voiceConnections[guildId] = joinVoiceChannel({
-    channelId: userVC.id,
-    guildId: guild.id,
-    adapterCreator: guild.voiceAdapterCreator,
-  });
+    if (!userVC) {
+      await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
+      return;
+    }
 
-  activeChannels[guildId] = interaction.channelId;
-  await interaction.editReply('入ってあげましたわ。');
-} catch (err) {
-  console.error('VC参加失敗:', err);
-  await interaction.editReply('VCへの参加に失敗しましたわ。');
+    try {
+      voiceConnections[guildId] = joinVoiceChannel({
+        channelId: userVC.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      });
+
+      activeChannels[guildId] = interaction.channelId;
+      await interaction.editReply('入ってあげましたわ。');
+    } catch (err) {
+      console.error('VC参加失敗:', err);
+      await interaction.editReply('VCへの参加に失敗しましたわ。');
+    }
+    break;
+
+  case 'ik-kill':
+    await interaction.deferReply();
+
+    if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
+      if (botVC && userVC?.id === botVC) {
+        await interaction.editReply('は？何してくれやがりますの？');
+        leaveVC(guildId, '');
+      } else {
+        await interaction.editReply('同じVCにいない君には命令権限はありませんわｗｗ');
+      }
+    } else {
+      await interaction.editReply('どこにも繋いでないですわねwざんねん！w');
+    }
+    break;
+
+  case 'ik-absolutekill':
+    await interaction.deferReply();
+
+    if (userId !== '1289133629972418613') {
+      await interaction.editReply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
+      return;
+    }
+
+    if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
+      await interaction.editReply('は？強制切断されましたわ。');
+      leaveVC(guildId, '');
+    } else {
+      await interaction.editReply('今はどこにも繋がっていませんわ。');
+    }
+    break;
+
+  case 'ik-stcheck':
+    await interaction.deferReply();
+
+    if (voiceConnections[guildId]?.state) {
+      await interaction.editReply(`voiceConnections: ${voiceConnections[guildId].state.status}\nactiveChannel: ${activeChannels[guildId]}`);
+    } else {
+      await interaction.editReply('状態確認を拒否しますわ');
+    }
+    break;
+
+  case 'ik-namespeak':
+    await interaction.deferReply();
+
+    const mode = interaction.options.getString('mode');
+    speakUserName[guildId] = (mode === 'on');
+    await interaction.editReply(mode === 'on'
+      ? '名前も呼んであげますわ。光栄に思いなさいｗ'
+      : 'もう名前は呼んであげませんわw');
+    break;
+
+  case 'ik-addword':
+    await interaction.deferReply();
+
+    const incorrect = interaction.options.getString('incorrect');
+    const correct = interaction.options.getString('correct');
+    if (!nameMappings[guildId]) nameMappings[guildId] = {};
+    if (nameMappings[guildId][incorrect]) {
+      await interaction.editReply(`${incorrect} はすでに登録されてますわボケ。`);
+    } else {
+      nameMappings[guildId][incorrect] = correct;
+      await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${incorrect} → ${correct}`);
+    }
+    break;
+
+  case 'ik-removeword':
+    await interaction.deferReply();
+
+    const toRemove = interaction.options.getString('incorrect');
+    if (nameMappings[guildId]?.[toRemove]) {
+      delete nameMappings[guildId][toRemove];
+      await interaction.editReply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
+    } else {
+      await interaction.editReply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
+    }
+    break;
+
+  case 'ik-wordlist':
+    await interaction.deferReply();
+
+    const mappings = nameMappings[guildId];
+    if (!mappings || Object.keys(mappings).length === 0) {
+      await interaction.editReply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
+    } else {
+      const list = Object.entries(mappings)
+        .map(([k, v]) => `${k} → ${v}`)
+        .join('\n');
+      await interaction.editReply(`単語リスト:\n${list}`);
+    }
+    break;
+
+  case 'ik-help':
+    await interaction.deferReply();
+    await interaction.editReply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
+    break;
+
+  default:
+    await interaction.deferReply();
+    await interaction.editReply('そのコマンドには対応しておりませんわ。');
+    break;
 }
-  break;
 
-    case 'ik-kill':
-      if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-        if (botVC && userVC?.id === botVC) {
-          await interaction.reply('は？何してくれやがりますの？');
-          leaveVC(guildId, '');
-        } else {
-          await interaction.reply('同じVCにいない君には命令権限はありませんわｗｗ');
-        }
-      } else {
-        await interaction.reply('どこにも繋いでないですわねwざんねん！w');
-      }
-      break;
-
-    case 'ik-absolutekill':
-      if (userId !== '1289133629972418613') {
-        await interaction.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
-        return;
-      }
-      if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-        await interaction.reply('は？強制切断されましたわ。');
-          leaveVC(guildId, '');
-      } else {
-        await interaction.reply('今はどこにも繋がっていませんわ。');
-      }
-      break;
-
-    case 'ik-stcheck':
-      if (voiceConnections[guildId]?.state) {
-        await interaction.reply(`voiceConnections: ${voiceConnections[guildId].state.status}\nactiveChannel: ${activeChannels[guildId]}`);
-      } else {
-        await interaction.reply('状態確認を拒否しますわ');
-      }
-      break;
-
-    case 'ik-namespeak':
-      const mode = interaction.options.getString('mode');
-      speakUserName[guildId] = (mode === 'on');
-      await interaction.reply(mode === 'on'
-        ? '名前も呼んであげますわ。光栄に思いなさいｗ'
-        : 'もう名前は呼んであげませんわw');
-      break;
-
-    case 'ik-addword':
-      const incorrect = interaction.options.getString('incorrect');
-      const correct = interaction.options.getString('correct');
-      if (!nameMappings[guildId]) nameMappings[guildId] = {};
-      if (nameMappings[guildId][incorrect]) {
-        await interaction.reply(`${incorrect} はすでに登録されてますわボケ。`);
-      } else {
-        nameMappings[guildId][incorrect] = correct;
-        await interaction.reply(`新しいの登録してやりました、感謝してくださいまし: ${incorrect} → ${correct}`);
-      }
-      break;
-
-    case 'ik-removeword':
-      const toRemove = interaction.options.getString('incorrect');
-      if (nameMappings[guildId]?.[toRemove]) {
-        delete nameMappings[guildId][toRemove];
-        await interaction.reply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
-      } else {
-        await interaction.reply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
-      }
-      break;
-
-    case 'ik-wordlist':
-      const mappings = nameMappings[guildId];
-      if (!mappings || Object.keys(mappings).length === 0) {
-        await interaction.reply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
-      } else {
-        const list = Object.entries(mappings)
-          .map(([k, v]) => `${k} → ${v}`)
-          .join('\n');
-        await interaction.reply(`単語リスト:\n${list}`);
-      }
-      break;
-
-    case 'ik-help':
-        await interaction.reply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
-        
-      break;
-
-    default:
-      await interaction.reply('そのコマンドには対応しておりませんわ。');
-      break;
-  }
-});
 
 
   //08.05end
