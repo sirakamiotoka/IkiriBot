@@ -24,9 +24,10 @@ RUN npm install pm2 -g
 
 # ソースコードをすべてコピー
 COPY . .
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
-# ポートを開ける（Expressを使っているため）
 EXPOSE 3000
 
-# pm2-runtimeでnpm startを監視して起動（落ちたら自動再起動）
-CMD ["node", "index.js"]
+CMD ["./start.sh"]
+
