@@ -626,7 +626,7 @@ if (content === '/ik.kill') {
     message.reply('このコマンドはサーバー内でのみ使えますわ。');
     return;
   }
-    /*
+    
 if (content === '/ik.commandremove') {
   if (!guildId) {
     message.reply('このコマンドはサーバー内でのみ使えますわ。');
@@ -650,7 +650,7 @@ if (content === '/ik.commandremove') {
 
   return;
   
-}*/
+}
   const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 　const CLIENT_ID = client.application.id;
   try {
