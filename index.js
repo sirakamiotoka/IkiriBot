@@ -969,6 +969,24 @@ if (currentVC) {
   const nonBotMembers = currentVC.members.filter(member => !member.user.bot);
   if (nonBotMembers.size === 0) {
     if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
+      if (vcTimeRecording[guildId] && vcJoinTimes[guildId]) {
+        const joinTime = vcJoinTimes[guildId];
+        const durationMs = Date.now() - joinTime;
+        const seconds = Math.floor(durationMs / 1000) % 60;
+        const minutes = Math.floor(durationMs / (1000 * 60)) % 60;
+        const hours = Math.floor(durationMs / (1000 * 60 * 60));
+        const durationString =
+          (hours > 0 ? `${hours}時間` : '') +
+          (minutes > 0 ? `${minutes}分` : '') +
+          `${seconds}秒`;
+
+        const textChannel = client.channels.cache.get(activeChannels[guildId]);
+        if (textChannel && textChannel.isTextBased()) {
+          textChannel.send(`BOTは${durationString}ほどVCにいましたわ。お疲れ様ですわ。`);
+        }
+
+        vcJoinTimes[guildId] = null; // リセット
+      }
       voiceConnections[guildId].destroy();
       voiceConnections[guildId] = null;
       const textChannel = client.channels.cache.get(activeChannels[guildId]);
