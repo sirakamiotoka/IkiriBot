@@ -357,6 +357,25 @@ function correctNamePronunciation(name, guildId) {
 }
 
 function leaveVC(guildId, reasonText = '切断されましたわ。') {
+  if (vcTimeRecording[guildId] && vcJoinTimes[guildId]) {
+    const joinTime = vcJoinTimes[guildId];
+    const durationMs = Date.now() - joinTime;
+    const seconds = Math.floor(durationMs / 1000) % 60;
+    const minutes = Math.floor(durationMs / (1000 * 60)) % 60;
+    const hours = Math.floor(durationMs / (1000 * 60 * 60));
+    const durationString =
+      (hours > 0 ? `${hours}時間` : '') +
+      (minutes > 0 ? `${minutes}分` : '') +
+      `${seconds}秒`;
+
+    const textChannel = client.channels.cache.get(activeChannels[guildId]);
+    if (textChannel && textChannel.isTextBased()) {
+      textChannel.send(`BOTは${durationString}ほどVCで労働させられていましたわ。疲れましたわ。`);
+    }
+
+    vcJoinTimes[guildId] = null; // リセット
+  }
+  
   if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
     voiceConnections[guildId].destroy();
     voiceConnections[guildId] = null;
@@ -892,7 +911,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
         const textChannel = client.channels.cache.get(activeChannels[guildId]);
         if (textChannel && textChannel.isTextBased()) {
-          textChannel.send(`BOTは${durationString}ほどVCにいましたわ。お疲れ様ですわ。`);
+          textChannel.send(`BOTは${durationString}ほどVCで労働させられていましたわ。疲れましたわ。`);
         }
       }
 
