@@ -75,11 +75,11 @@ const ikCommands = [
     .setName('ik-addword')
     .setDescription('読み間違えてる部分を変えてあげます')
     .addStringOption(option =>
-      option.setName('incorrect')
+      option.setName('間違ってる読み')
         .setDescription('Botが誤読してる読み方')
         .setRequired(true))
     .addStringOption(option =>
-      option.setName('correct')
+      option.setName('正しい読み')
         .setDescription('正しい読み方')
         .setRequired(true)),
 
@@ -87,7 +87,7 @@ const ikCommands = [
     .setName('ik-removeword')
     .setDescription('誤読修正単語を木端微塵にします')
     .addStringOption(option =>
-      option.setName('incorrect')
+      option.setName('読み')
         .setDescription('木端微塵にする読み方')
         .setRequired(true)),
 
@@ -462,33 +462,46 @@ switch (commandName) {
     break;
 
   case 'ik-namespeak':
-    await interaction.deferReply();
+  await interaction.deferReply();
 
-    const mode = interaction.options.getString('mode');
+  const mode = interaction.options.getString('mode'); // "on"か"off"
+  const current = speakUserName[guildId] ?? true; // デフォルトはtrue(on）
+
+  if ((mode === 'on' && current === true) || (mode === 'off' && current === false)) {
+    await interaction.editReply(
+      mode === 'on'
+        ? 'すでにonになってますわよ？ｗ'
+        : 'すでにoffになってますわよ？ｗ'
+    );
+  } else {
     speakUserName[guildId] = (mode === 'on');
-    await interaction.editReply(mode === 'on'
-      ? '名前も呼んであげますわ。光栄に思いなさいｗ'
-      : 'もう名前は呼んであげませんわw');
-    break;
+    await interaction.editReply(
+      mode === 'on'
+        ? '名前も呼んであげますわ。光栄に思いなさいｗ'
+        : 'もう名前は呼んであげませんわｗ'
+    );
+  }
+  break;
+
 
   case 'ik-addword':
     await interaction.deferReply();
 
-    const incorrect = interaction.options.getString('incorrect');
-    const correct = interaction.options.getString('correct');
+    const NGyomi = interaction.options.getString('間違ってる読み');
+    const OKyomi = interaction.options.getString('正しい読み');
     if (!nameMappings[guildId]) nameMappings[guildId] = {};
-    if (nameMappings[guildId][incorrect]) {
-      await interaction.editReply(`${incorrect} はすでに登録されてますわボケ。`);
+    if (nameMappings[guildId][NGyomi]) {
+      await interaction.editReply(`${NGyomi} はすでに登録されてますわボケ。`);
     } else {
-      nameMappings[guildId][incorrect] = correct;
-      await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${incorrect} → ${correct}`);
+      nameMappings[guildId][NGyomi] = OKyomi;
+      await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${NGyomi} → ${OKyomi}`);
     }
     break;
 
   case 'ik-removeword':
     await interaction.deferReply();
 
-    const toRemove = interaction.options.getString('incorrect');
+    const toRemove = interaction.options.getString('読み');
     if (nameMappings[guildId]?.[toRemove]) {
       delete nameMappings[guildId][toRemove];
       await interaction.editReply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
@@ -919,7 +932,7 @@ app.listen(port, () => {
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   
-  process.exit(1); // プロセスを終了 → 次の自動再起動処理へ
+  process.exit(1); // プロセスを終了して次の自動再起動処理へ
 });
 
 process.on('unhandledRejection', (reason, promise) => {
