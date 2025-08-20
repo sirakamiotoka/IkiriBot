@@ -30,6 +30,9 @@ let nameMappings = {};
 let speakUserName = {}; //07.24
 const lastSpeakerInfo = {}; 
 // const speechSpeed = {}; //07.29
+//08.20
+const vcTimeRecording = {}; // guildIdごとにtrue/false
+const vcJoinTimes = {};     // guildIdごとにBOTのVC参加時刻
 
 /* 08.05
 client.once(Events.ClientReady, async () => {
@@ -70,7 +73,20 @@ const ikCommands = [
           { name: 'off', value: 'off' }
         )
     ),
-
+  //08.20
+new SlashCommandBuilder()
+  .setName('ik-vctimerecording')
+  .setDescription('BOTのVC滞在時間を記録します。')
+  .addStringOption(option =>
+    option.setName('mode')
+      .setDescription('on または off')
+      .setRequired(true)
+      .addChoices(
+        { name: 'on', value: 'on' },
+        { name: 'off', value: 'off' }
+      )
+  ),
+  
   new SlashCommandBuilder()
     .setName('ik-addword')
     .setDescription('読み間違えてる部分を変えてあげます')
@@ -434,6 +450,27 @@ switch (commandName) {
       await interaction.editReply('どこにも繋いでないですわねwざんねん！w');
     }
     break;
+
+    //08.20
+  case 'ik-vctimerecording': 
+  await interaction.deferReply();
+  const mode = interaction.options.getString('mode');
+  if (mode === 'on') {
+    vcTimeRecording[guildId] = true;
+    // 現在BOTがVCにいる場合は時間開始
+    const botMember = guild.members.me;
+    const botVCid = botMember.voice.channelId;
+    if (botVCid) {
+      vcJoinTimes[guildId] = new Date();
+    }
+    await interaction.editReply('VC滞在時間の記録を開始しましたわ。');
+  } else {
+    vcTimeRecording[guildId] = false;
+    vcJoinTimes[guildId] = null;
+    await interaction.editReply('VC滞在時間の記録を停止しましたわ。');
+  }
+  break;
+
 
   case 'ik-absolutekill':
     await interaction.deferReply();
@@ -823,11 +860,47 @@ text = shortenText(text);// 08.05
 });
 
 
+
+
 // VC出入り読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
-  const guildId = newState.guild.id;
   const botId = client.user.id;
+  const guildId = newState.guild?.id || oldState.guild?.id;
+  if (!guildId) return;
 
+  const isBotUpdate = oldState.id === botId || newState.id === botId;
+
+  // BOTのVC入退室監視
+  if (isBotUpdate) {
+    // BOTがVCに入った
+    if (!oldState.channelId && newState.channelId) {
+      vcJoinTimes[guildId] = Date.now();
+    }
+
+    // BOTがVCから退出
+    if (oldState.channelId && !newState.channelId) {
+      const joinTime = vcJoinTimes[guildId];
+      if (joinTime) {
+        const durationMs = Date.now() - joinTime;
+        const seconds = Math.floor(durationMs / 1000) % 60;
+        const minutes = Math.floor(durationMs / (1000 * 60)) % 60;
+        const hours = Math.floor(durationMs / (1000 * 60 * 60));
+        const durationString =
+          (hours > 0 ? `${hours}時間` : '') +
+          (minutes > 0 ? `${minutes}分` : '') +
+          `${seconds}秒`;
+
+        const textChannel = client.channels.cache.get(activeChannels[guildId]);
+        if (textChannel && textChannel.isTextBased()) {
+          textChannel.send(`BOTは${durationString}ほどVCにいましたわ。お疲れ様ですわ。`);
+        }
+      }
+
+      vcJoinTimes[guildId] = null;
+    }
+  }
+
+  // BOTが権限者によってVCから蹴られた場合の処理（これは独立）
   if (oldState.id === botId && oldState.channelId && !newState.channelId) {
     leaveVC(guildId, '権限者の手によって木端微塵にされましたわ...');
     return;
@@ -835,21 +908,18 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
   if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
 
-  // 07.28移動
-const botMember = newState.guild.members.me;
-const currentVC = botMember?.voice?.channel;
-  // 移動終了
-
-// 07.28追加
+  // Botの現在のVC
+  const botMember = newState.guild.members.me;
+  const currentVC = botMember?.voice?.channel;
   if (!currentVC) return;
 
-　// 読み上げ対象をBotと同じVCに限定
-if (
-  (newState.channelId && newState.channelId !== currentVC.id) &&
-  (oldState.channelId && oldState.channelId !== currentVC.id)
-) {
-  return;
-}
+  // Botと同じVCでの出入りのみ読み上げ対象
+  if (
+    (newState.channelId && newState.channelId !== currentVC.id) &&
+    (oldState.channelId && oldState.channelId !== currentVC.id)
+  ) {
+    return;
+  }
  // 追加終了
 
 // 修正後↓
@@ -864,19 +934,7 @@ if (!oldState.channel && newState.channel && newState.channelId === currentVC.id
   text = `${correctedName}がくたばりました。`;
 }
   
-  /*
-  07.28コメントアウト
-  let text = null;
-  if (!oldState.channel && newState.channel) {
-    const member = newState.member || newState.guild.members.cache.get(newState.id);
-    const correctedName = correctNamePronunciation(member?.displayName, guildId);
-    text = `${correctedName}が侵入しましたわね。`;
-  } else if (oldState.channel && !newState.channel) {
-    const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
-    const correctedName = correctNamePronunciation(member?.displayName, guildId);
-    text = `${correctedName}がくたばりました。`;
-  }
-  */
+  
   if (text) {
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `vc_notice_${uniqueId}.mp3`);
