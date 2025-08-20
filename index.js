@@ -454,8 +454,8 @@ switch (commandName) {
     //08.20
   case 'ik-vctimerecording': 
   await interaction.deferReply();
-  const mode = interaction.options.getString('mode');
-  if (mode === 'on') {
+  const timermode = interaction.options.getString('mode');
+  if (timermode === 'on') {
     vcTimeRecording[guildId] = true;
     // 現在BOTがVCにいる場合は時間開始
     const botMember = guild.members.me;
