@@ -21,10 +21,8 @@ RUN rm -rf node_modules package-lock.json
 
 RUN npm install
 
-# pm2をグローバルインストール（プロセスマネージャ）
-# RUN npm install pm2 -g
-
 # ソースコードをすべてコピー
 COPY . .
 
-CMD ["npm", "start"]
+RUN npm install pm2 -g
+CMD ["pm2-runtime", "npm", "--", "start"]
