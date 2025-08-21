@@ -1035,3 +1035,18 @@ process.on('unhandledRejection', (reason, promise) => {
  // process.exit(1);
 });
 
+
+
+
+
+client.on('error', (err) => {
+  console.error('Discord client error:', err);
+});
+
+client.on('shardDisconnect', (event, shardId) => {
+  console.warn(`Shard ${shardId} disconnected:`, event);
+});
+
+client.on('shardReconnecting', (shardId) => {
+  console.log(`Shard ${shardId} reconnecting...`);
+});
