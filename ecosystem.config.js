@@ -13,11 +13,12 @@ module.exports = {
   ],
 };
 */
+
 module.exports = {
   apps: [
     {
       name: "app",
-      script: "index.js", 
+      script: "index.js",   // npm start 経由しない
       autorestart: true,
       watch: false,
       max_restarts: 10,
