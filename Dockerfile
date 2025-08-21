@@ -21,6 +21,6 @@ RUN npm install pm2 -g
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+CMD ["npm", "ecosystem.config.js"]
 
 #CMD ["pm2-runtime", "ecosystem.config.js"]
