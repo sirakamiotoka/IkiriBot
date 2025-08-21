@@ -18,7 +18,7 @@ module.exports = {
   apps: [
     {
       name: "app",
-      script: "index.js",   // npm start 経由しない
+      script: "index.js",   
       autorestart: true,
       watch: false,
       max_restarts: 10,
