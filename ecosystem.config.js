@@ -1,3 +1,4 @@
+/*
 module.exports = {
   apps: [
     {
@@ -10,4 +11,20 @@ module.exports = {
       restart_delay: 5000, // 再起動間隔(ミリ秒)
     },
   ],
+};
+*/
+module.exports = {
+  apps: [
+    {
+      name: "app",
+      script: "index.js", 
+      autorestart: true,
+      watch: false,
+      max_restarts: 10,
+      restart_delay: 5000,
+      env: {
+        NODE_ENV: "production"
+      }
+    }
+  ]
 };
