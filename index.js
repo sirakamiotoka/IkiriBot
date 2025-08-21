@@ -1023,15 +1023,15 @@ app.listen(port, () => {
     process.exit(1);
   });
 });
-/*
+
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   
-  process.exit(1); // プロセスを終了して次の自動再起動処理へ
+ // process.exit(1); // プロセスを終了して次の自動再起動処理へ
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+ // process.exit(1);
 });
-*/
+
