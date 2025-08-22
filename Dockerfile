@@ -17,8 +17,12 @@ RUN npm install
 
 COPY . .
 
-RUN npm install pm2 -g
+# PM2 インストール削除
+# RUN npm install pm2 -g
 
 EXPOSE 3000
 
-CMD ["pm2-runtime", "ecosystem.config.js"]
+# index.js を直接実行
+CMD ["node", "index.js"]
+
+# CMD ["pm2-runtime", "ecosystem.config.js"]
