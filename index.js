@@ -149,7 +149,7 @@ function loadServerConfigs() {
 }
 
 // 設定ファイルに保存する 08.27
-function saveServerConfigs() {
+function saveSettings() {
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(serverConfigs, null, 2), 'utf8');
     console.log('設定ファイルを保存しました');
