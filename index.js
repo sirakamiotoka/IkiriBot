@@ -152,7 +152,7 @@ function loadServerConfigs() {
 function saveSettings() {
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(serverConfigs, null, 2), 'utf8');
-    console.log('設定ファイルを保存しました');
+    //console.log('設定ファイルを保存しました');
   } catch (err) {
     console.error('設定ファイルの保存に失敗しました:', err);
   }
@@ -1008,12 +1008,12 @@ app.listen(port, () => {
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   
- // process.exit(1); 
+ process.exit(1); 
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
- // process.exit(1);
+ process.exit(1);
 });
 
 
