@@ -17,7 +17,7 @@ module.exports = {
 module.exports = {
   apps: [
     {
-      name: "app",
+      name: "ikiribot",
       script: "index.js",   
       autorestart: true,
       watch: false,
