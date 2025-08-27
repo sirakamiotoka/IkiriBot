@@ -994,14 +994,14 @@ app.listen(port, () => {
   console.log(`✔ Express listening on port ${port}`);
   if (!process.env.BOT_TOKEN) {
     console.error("BOT_TOKEN が .env に設定されていません");
-  //  process.exit(1);
+  process.exit(1);
   }
 
   client.login(process.env.BOT_TOKEN).then(() => {
     console.log(" Discord bot ログイン成功");
   }).catch(err => {
     console.error("Discord bot ログイン失敗:", err);
-   // process.exit(1);
+   process.exit(1);
   });
 });
 
