@@ -17,8 +17,8 @@ RUN npm install
 
 COPY . .
 
-# PM2 インストール削除
-# RUN npm install pm2 -g
+# PM2 インストール
+ RUN npm install pm2 -g
 
 EXPOSE 3000
 
