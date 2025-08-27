@@ -281,7 +281,10 @@ async function playNextInQueue(guildId) {
 }
 */
 
+
+
 //08.04
+/* 08.27 コメントアウト
 async function playNextInQueue(guildId) {
   if (isPlaying[guildId]) return;
   isPlaying[guildId] = true;
@@ -340,8 +343,74 @@ async function playNextInQueue(guildId) {
 
   isPlaying[guildId] = false;
 }
-//08.04
 
+//08.04
+*/ // 08.27
+// 08.27 追加
+const queueLocks = {};
+
+async function playNextInQueue(guildId) {
+  if (queueLocks[guildId]) return;
+  queueLocks[guildId] = true;
+
+  try {
+    while (
+      audioQueue[guildId] &&
+      audioQueue[guildId].length > 0 &&
+      voiceConnections[guildId] &&
+      voiceConnections[guildId].state.status !== 'destroyed'
+    ) {
+      const { text, file } = audioQueue[guildId].shift();
+
+      try {
+        // gTTSを非同期生成
+        await speakText(text, 'ja', file);
+
+        // ffmpegをパイプで変換
+        const stream = convertToPCMStream(file);
+
+        // Discordで再生
+        const player = createAudioPlayer();
+        const resource = createAudioResource(stream, {
+          inputType: StreamType.Raw,
+          inlineVolume: true
+        });
+        resource.volume.setVolume(0.8);
+        player.play(resource);
+
+        if (
+          voiceConnections[guildId] &&
+          voiceConnections[guildId].state.status !== 'destroyed'
+        ) {
+          voiceConnections[guildId].subscribe(player);
+        } else {
+          fs.unlink(file, () => {});
+          break;
+        }
+
+        await new Promise((resolve) => {
+          player.once(AudioPlayerStatus.Idle, () => {
+            fs.unlink(file, () => {});
+            resolve();
+          });
+
+          player.once('error', (error) => {
+            console.error(`AudioPlayer エラー: ${error.message}`);
+            fs.unlink(file, () => {});
+            resolve();
+          });
+        });
+
+      } catch (err) {
+        console.error('再生中エラー:', err);
+      }
+    }
+  } catch (err) {
+    console.error('playNextInQueue エラー:', err);
+  } finally {
+    queueLocks[guildId] = false;
+  }
+}
 
 
 
