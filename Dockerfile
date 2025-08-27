@@ -23,6 +23,6 @@ COPY . .
 EXPOSE 3000
 
 # index.js を直接実行
-CMD ["node", "index.js"]
+# CMD ["node", "index.js"]
 
-# CMD ["pm2-runtime", "ecosystem.config.js"]
+CMD ["pm2-runtime", "ecosystem.config.js"]
