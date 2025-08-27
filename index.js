@@ -427,6 +427,7 @@ switch (commandName) {
   const timermode = interaction.options.getString('mode');
   if (timermode === 'on') {
     vcTimeRecording[guildId] = true;
+    saveSettings();
     // 現在BOTがVCにいる場合は時間開始
     const botMember = guild.members.me;
     const botVCid = botMember.voice.channelId;
@@ -437,6 +438,7 @@ switch (commandName) {
   } else {
     vcTimeRecording[guildId] = false;
     vcJoinTimes[guildId] = null;
+    saveSettings();
     await interaction.editReply('VC滞在時間の記録を停止しましたわ。');
   }
   break;
@@ -482,6 +484,7 @@ switch (commandName) {
     );
   } else {
     speakUserName[guildId] = (mode === 'on');
+    saveSettings();
     await interaction.editReply(
       mode === 'on'
         ? '名前も呼んであげますわ。光栄に思いなさいｗ'
@@ -501,6 +504,7 @@ switch (commandName) {
       await interaction.editReply(`${NGyomi} はすでに登録されてますわボケ。`);
     } else {
       nameMappings[guildId][NGyomi] = OKyomi;
+      saveSettings();
       await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${NGyomi} → ${OKyomi}`);
     }
     break;
