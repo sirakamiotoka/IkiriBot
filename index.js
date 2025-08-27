@@ -132,7 +132,30 @@ new SlashCommandBuilder()
 /*client.on(Events.InteractionCreate, async interaction => {
 });*/
 
+const CONFIG_PATH = path.join(__dirname, 'config.json');
 
+// 設定ファイルを読み込む 08.27
+function loadServerConfigs() {
+  if (fs.existsSync(CONFIG_PATH)) {
+    try {
+      const data = fs.readFileSync(CONFIG_PATH, 'utf8');
+      serverConfigs = JSON.parse(data);
+      console.log('設定ファイルを読み込みました');
+    } catch (err) {
+      console.error('設定ファイルの読み込みに失敗しました:', err);
+    }
+  }
+}
+
+// 設定ファイルに保存する 08.27
+function saveServerConfigs() {
+  try {
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(serverConfigs, null, 2), 'utf8');
+    console.log('設定ファイルを保存しました');
+  } catch (err) {
+    console.error('設定ファイルの保存に失敗しました:', err);
+  }
+}
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
   const userMentionRegex = /<@!?(\d+)>/g;
@@ -358,6 +381,7 @@ function leaveVC(guildId, reasonText = '切断されましたわ。') {
 
 // Bot起動時
 client.once(Events.ClientReady, c => {
+  loadServerConfigs(); 
   console.log(`(${c.user.tag}) が起動しましたわ！`);
 });
 
