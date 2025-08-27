@@ -12,10 +12,6 @@ const { v4: uuidv4 } = require('uuid');
 const gTTS = require('gtts');
 
 
-client.on('error', err => console.error('[Client Error]', err));
-client.on('shardError', err => console.error('[Shard Error]', err));
-client.on('disconnect', event => console.warn('[Disconnected]', event));
-client.on('reconnecting', () => console.log('[Reconnecting]'));
 
 process.on('uncaughtException', err => {
   console.error('[Uncaught Exception]', err);
@@ -32,6 +28,11 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ]
 });
+
+client.on('error', err => console.error('[Client Error]', err));
+client.on('shardError', err => console.error('[Shard Error]', err));
+client.on('disconnect', event => console.warn('[Disconnected]', event));
+client.on('reconnecting', () => console.log('[Reconnecting]'));
 
 // グローバル変数をサーバーごとに管理
 let activeChannels = {};
