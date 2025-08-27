@@ -11,6 +11,18 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const gTTS = require('gtts');
 
+
+client.on('error', err => console.error('[Client Error]', err));
+client.on('shardError', err => console.error('[Shard Error]', err));
+client.on('disconnect', event => console.warn('[Disconnected]', event));
+client.on('reconnecting', () => console.log('[Reconnecting]'));
+
+process.on('uncaughtException', err => {
+  console.error('[Uncaught Exception]', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection]', reason);
+});
 // Discordクライアント作成
 const client = new Client({
   intents: [
@@ -215,137 +227,7 @@ async function convertToPCM(mp3Path, pcmPath) {
 
 
 // 音声再生関数
-/*
-08.04
-async function playNextInQueue(guildId) {
-  if (isPlaying[guildId]) return;
-  isPlaying[guildId] = true;
 
-  while (
-    audioQueue[guildId] &&
-    audioQueue[guildId].length > 0 &&
-    voiceConnections[guildId] &&
-    voiceConnections[guildId].state.status !== 'destroyed'
-  ) {
-    const { text, file } = audioQueue[guildId].shift();
-
-    try {
-      await speakText(text, 'ja', file);
-      const pcmPath = file.replace('.mp3', '.pcm');
-      await convertToPCM(file, pcmPath);
-
-      const player = createAudioPlayer();
-      const stream = fs.createReadStream(pcmPath);
-
-      const resource = createAudioResource(stream, {
-        inputType: StreamType.Raw,
-        inlineVolume: true
-      });
-
-      resource.volume.setVolume(0.8);
-      player.play(resource);
-
-      if (
-        voiceConnections[guildId] &&
-        voiceConnections[guildId].state.status !== 'destroyed'
-      ) {
-        voiceConnections[guildId].subscribe(player);
-      } else {
-        console.warn(`再生中断: VCが切断されていました (guildId: ${guildId})`);
-        fs.unlink(file, () => {});
-        fs.unlink(pcmPath, () => {});
-        break; 
-      }
-
-      await new Promise((resolve) => {
-        player.once(AudioPlayerStatus.Idle, () => {
-          fs.unlink(file, () => {});
-          fs.unlink(pcmPath, () => {});
-          resolve();
-        });
-
-        player.once('error', (error) => {
-          console.error(`AudioPlayer エラー: ${error.message}`);
-          fs.unlink(file, () => {});
-          fs.unlink(pcmPath, () => {});
-          resolve();
-        });
-      });
-
-    } catch (err) {
-      console.error('再生中エラー:', err);
-    }
-  }
-
-  isPlaying[guildId] = false;
-}
-*/
-
-
-
-//08.04
-/* 08.27 コメントアウト
-async function playNextInQueue(guildId) {
-  if (isPlaying[guildId]) return;
-  isPlaying[guildId] = true;
-
-  while (
-    audioQueue[guildId] &&
-    audioQueue[guildId].length > 0 &&
-    voiceConnections[guildId] &&
-    voiceConnections[guildId].state.status !== 'destroyed'
-  ) {
-    const { text, file } = audioQueue[guildId].shift();
-
-    try {
-      // gTTSを非同期生成
-      await speakText(text, 'ja', file);
-
-      // ffmpegをパイプで変換
-      const stream = convertToPCMStream(file);
-      
-      // Discordで再生
-      const player = createAudioPlayer();
-      const resource = createAudioResource(stream, {
-        inputType: StreamType.Raw,
-        inlineVolume: true
-      });
-      resource.volume.setVolume(0.8);
-      player.play(resource);
-
-      if (
-        voiceConnections[guildId] &&
-        voiceConnections[guildId].state.status !== 'destroyed'
-      ) {
-        voiceConnections[guildId].subscribe(player);
-      } else {
-        fs.unlink(file, () => {});
-        break;
-      }
-
-      await new Promise((resolve) => {
-        player.once(AudioPlayerStatus.Idle, () => {
-          fs.unlink(file, () => {});
-          resolve();
-        });
-
-        player.once('error', (error) => {
-          console.error(`AudioPlayer エラー: ${error.message}`);
-          fs.unlink(file, () => {});
-          resolve();
-        });
-      });
-
-    } catch (err) {
-      console.error('再生中エラー:', err);
-    }
-  }
-
-  isPlaying[guildId] = false;
-}
-
-//08.04
-*/ // 08.27
 // 08.27 追加
 const queueLocks = {};
 
