@@ -18,11 +18,11 @@ RUN npm install
 COPY . .
 
 # PM2 インストール
- RUN npm install pm2 -g
+RUN npm install pm2 -g
 
 EXPOSE 3000
 
-# index.js を直接実行
+# index.jsを直接実行
 # CMD ["node", "index.js"]
 
 CMD ["pm2-runtime", "ecosystem.config.js"]
