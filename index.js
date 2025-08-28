@@ -333,6 +333,7 @@ function correctNamePronunciation(name, guildId) {
 
 function leaveVC(guildId, reasonText = '切断されましたわ。') {
   if (vcTimeRecording[guildId] && vcJoinTimes[guildId]) {
+    
     const joinTime = vcJoinTimes[guildId];
     const durationMs = Date.now() - joinTime;
     const seconds = Math.floor(durationMs / 1000) % 60;
@@ -371,6 +372,8 @@ function leaveVC(guildId, reasonText = '切断されましたわ。') {
     for (const item of audioQueue[guildId]) {
       fs.unlink(item.file, err => {
         if (err) console.error(`未処理ファイル削除失敗: ${err.message}`);
+        
+        process.exit(1); 
       });
     }
   }
@@ -450,21 +453,35 @@ switch (commandName) {
   case 'ik-vctimerecording': 
   await interaction.deferReply();
   const timermode = interaction.options.getString('mode');
-  if (timermode === 'on') {
+  
+  // デフォルト値: 未設定なら true にして保存
+  if (vcTimeRecording[guildId] === undefined) {
     vcTimeRecording[guildId] = true;
     saveSettings();
-    // 現在BOTがVCにいる場合は時間開始
-    const botMember = guild.members.me;
-    const botVCid = botMember.voice.channelId;
-    if (botVCid) {
-      vcJoinTimes[guildId] = new Date();
+  }
+
+  if (timermode === 'on') {
+    if (vcTimeRecording[guildId] === true) {
+      await interaction.editReply('既にonですわよ？ｗ');
+    } else {
+      vcTimeRecording[guildId] = true;
+      saveSettings();
+      // 現在BOTがVCにいる場合は時間開始
+      const botMember = guild.members.me;
+      const botVCid = botMember.voice.channelId;
+      if (botVCid) {
+        vcJoinTimes[guildId] = new Date();
+      }
+      await interaction.editReply('VC滞在時間の記録を開始しましたわ。');
     }
-    await interaction.editReply('VC滞在時間の記録を開始しましたわ。');
-  } else {
+  } else if (timermode === 'off') {
     vcTimeRecording[guildId] = false;
     vcJoinTimes[guildId] = null;
     saveSettings();
     await interaction.editReply('VC滞在時間の記録を停止しましたわ。');
+  } else {
+    // 引数がon/off以外
+    await interaction.editReply('modeは `on` または `off` を指定してくださいませ。');
   }
   break;
 
@@ -899,9 +916,9 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     }
   }
 
-  // BOTが権限者によってVCから蹴られた場合の処理（これは独立）
+  // BOTが権限者によってVCから蹴られた場合の処理
   if (oldState.id === botId && oldState.channelId && !newState.channelId) {
-    leaveVC(guildId, '権限者の手によって木端微塵にされましたわ...');
+    leaveVC(guildId, '権限者の仕業か不具合による最適化処理によって木端微塵にされましたわ...');
     return;
   }
 
