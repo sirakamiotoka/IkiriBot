@@ -46,6 +46,7 @@ const lastSpeakerInfo = {};
 //08.20
 const vcTimeRecording = {}; // guildIdごとにtrue/false
 const vcJoinTimes = {};     // guildIdごとにBOTのVC参加時刻
+const audioPlayers = {}
 
 /* 08.05
 client.once(Events.ClientReady, async () => {
@@ -277,6 +278,7 @@ async function playNextInQueue(guildId) {
 
         // Discordで再生
         const player = createAudioPlayer();
+        audioPlayers[guildId] = player;
         const resource = createAudioResource(stream, {
           inputType: StreamType.Raw,
           inlineVolume: true
