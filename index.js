@@ -331,9 +331,9 @@ function correctNamePronunciation(name, guildId) {
   return name;
 }
 
-function leaveVC(guildId, reasonText = '切断されましたわ。') {
+async function leaveVC(guildId, reasonText = '切断されましたわ。') {
+  // VC滞在時間のログ
   if (vcTimeRecording[guildId] && vcJoinTimes[guildId]) {
-    
     const joinTime = vcJoinTimes[guildId];
     const durationMs = Date.now() - joinTime;
     const seconds = Math.floor(durationMs / 1000) % 60;
@@ -345,42 +345,55 @@ function leaveVC(guildId, reasonText = '切断されましたわ。') {
       `${seconds}秒`;
 
     const textChannel = client.channels.cache.get(activeChannels[guildId]);
-    if (textChannel && textChannel.isTextBased()) {
+    if (textChannel?.isTextBased()) {
       textChannel.send(`BOTは${durationString}ほどVCで労働させられていましたわ。疲れましたわ。`);
     }
 
-    vcJoinTimes[guildId] = null; // リセット
+    vcJoinTimes[guildId] = null;
   }
-  
+
+  // 再生中断
+  if (audioPlayers[guildId]) {
+    try {
+      audioPlayers[guildId].stop(true); // trueで現在の再生も止める
+    } catch (err) {
+      console.warn(`プレイヤー停止エラー: ${err.message}`);
+      console.warn(`自動再起動を実行します`);
+      process.exit(1); 
+    }
+  }
+
+  // 残りの未処理ファイル削除
+  if (audioQueue[guildId]) {
+    for (const item of audioQueue[guildId]) {
+      fs.unlink(item.file, err => {
+        if (err) {
+          console.warn(`未処理ファイル削除失敗: ${item.file} (${err.message})`);
+          console.warn(`自動再起動を実行します`);
+          process.exit(1); 
+        }
+      });
+    }
+    audioQueue[guildId] = [];
+  }
+  isPlaying[guildId] = false;
+
+  // VC切断
   if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
     voiceConnections[guildId].destroy();
     voiceConnections[guildId] = null;
   }
 
+  // テキスト通知
   if (activeChannels[guildId]) {
     const textChannel = client.channels.cache.get(activeChannels[guildId]);
-    if (textChannel && textChannel.isTextBased()) {
-      if (reasonText!=='') {
+    if (textChannel?.isTextBased() && reasonText !== '') {
       textChannel.send(reasonText);
-      }
     }
     activeChannels[guildId] = null;
   }
-
-  // キューの音声ファイルを削除
-  if (audioQueue[guildId]) {
-    for (const item of audioQueue[guildId]) {
-      fs.unlink(item.file, err => {
-        if (err) console.error(`未処理ファイル削除失敗: ${err.message}`);
-        
-        process.exit(1); 
-      });
-    }
-  }
-
-  isPlaying[guildId] = false;
-  audioQueue[guildId] = [];
 }
+
 
 
 // Bot起動時
@@ -1011,25 +1024,27 @@ app.listen(port, () => {
   console.log(`✔ Express listening on port ${port}`);
   if (!process.env.BOT_TOKEN) {
     console.error("BOT_TOKEN が .env に設定されていません");
-  process.exit(1);
+    
   }
 
   client.login(process.env.BOT_TOKEN).then(() => {
     console.log(" Discord bot ログイン成功");
   }).catch(err => {
     console.error("Discord bot ログイン失敗:", err);
+    console.warn(`自動再起動を実行します`);
    process.exit(1);
   });
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  
+  console.warn(`自動再起動を実行します`);
  process.exit(1); 
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  console.warn(`自動再起動を実行します`);
  process.exit(1);
 });
 
