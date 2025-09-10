@@ -530,8 +530,12 @@ switch (commandName) {
   case 'ik-namespeak':
   await interaction.deferReply();
 
+    if (speakUserName[guildId] === undefined) {
+    speakUserName[guildId] = true; // デフォルトはON
+    saveSettings();
+  }
   const mode = interaction.options.getString('mode'); // "on"か"off"
-  const current = speakUserName[guildId] ?? true; // デフォルトはtrue(on）
+  const current = speakUserName[guildId];
 
   if ((mode === 'on' && current === true) || (mode === 'off' && current === false)) {
     await interaction.editReply(
