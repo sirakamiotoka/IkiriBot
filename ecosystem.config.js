@@ -5,8 +5,8 @@ module.exports = {
       script: "index.js",   
       autorestart: true,
       watch: false,
-      max_restarts: 10,
-      restart_delay: 1000,
+      max_restarts: 0,
+      restart_delay: 1500,
       env: {
         NODE_ENV: "production"
       }
