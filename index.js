@@ -361,7 +361,7 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
     } catch (err) {
       console.warn(`プレイヤー停止エラー: ${err.message}`);
       console.warn(`自動再起動を実行します`);
-      process.exit(1); 
+     // process.exit(1); 
     }
   }
 
@@ -372,7 +372,7 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
         if (err) {
           console.warn(`未処理ファイル削除失敗: ${item.file} (${err.message})`);
           console.warn(`自動再起動を実行します`);
-          process.exit(1); 
+         // process.exit(1); 
         }
       });
     }
@@ -1032,26 +1032,45 @@ app.listen(port, () => {
     console.error("BOT_TOKEN が .env に設定されていません");
     
   }
+//09.24
+client.on("guildCreate", async guild => {
+  console.log(`新しいサーバーに参加しました: ${guild.name} (${guild.id})`);
 
+  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+  const CLIENT_ID = client.application.id;
+
+  try {
+    await rest.put(
+      Routes.applicationGuildCommands(CLIENT_ID, guild.id),
+      { body: ikCommands }
+    );
+    console.log(`サーバー「${guild.name}」にコマンドを自動登録しました`);
+  } catch (err) {
+    console.error("スラッシュコマンド自動登録エラー:", err);
+  }
+});
+
+
+  
   client.login(process.env.BOT_TOKEN).then(() => {
     console.log(" Discord bot ログイン成功");
   }).catch(err => {
     console.error("Discord bot ログイン失敗:", err);
     console.warn(`自動再起動を実行します`);
-   process.exit(1);
+  // process.exit(1);
   });
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   console.warn(`自動再起動を実行します`);
- process.exit(1); 
+// process.exit(1); 
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   console.warn(`自動再起動を実行します`);
- process.exit(1);
+// process.exit(1);
 });
 
 
