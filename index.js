@@ -361,7 +361,7 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
     } catch (err) {
       console.warn(`プレイヤー停止エラー: ${err.message}`);
       console.warn(`自動再起動を実行します`);
-     // process.exit(1); 
+     // //process.exit(1); 
     }
   }
 
@@ -372,7 +372,7 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
         if (err) {
           console.warn(`未処理ファイル削除失敗: ${item.file} (${err.message})`);
           console.warn(`自動再起動を実行します`);
-          process.exit(1); 
+          //process.exit(1); 
         }
       });
     }
@@ -1057,40 +1057,40 @@ client.on("guildCreate", async guild => {
   }).catch(err => {
     console.error("Discord bot ログイン失敗:", err);
     console.warn(`自動再起動を実行します`);
-   process.exit(1);
+   //process.exit(1);
   });
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   console.warn(`自動再起動を実行します`);
- process.exit(1); 
+ //process.exit(1); 
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   console.warn(`自動再起動を実行します`);
- process.exit(1);
+ //process.exit(1);
 });
 
 
 client.on('error', err => {
   console.error('[Client Error]', err);
   console.warn(`自動再起動を実行します`);
-  process.exit(1);
+  //process.exit(1);
 });
 
 client.on('shardError', err => {
   console.error('[Shard Error]', err);
   console.warn(`自動再起動を実行します`);
-  process.exit(1);
+  //process.exit(1);
 });
 
 
 client.on('disconnect', event => {
   console.error('[Disconnected]', event);
   console.warn(`自動再起動を実行します`);
-  process.exit(1);
+  //process.exit(1);
 });
 
 
