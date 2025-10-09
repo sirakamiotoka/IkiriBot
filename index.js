@@ -174,6 +174,36 @@ async function sanitizeText(text, guild) {
     .trim();
 }
 
+async function safeJoinVoiceChannel(member, guild, interaction) { //10.09
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error("VC接続がタイムアウトしました（おそらくアプリがバックグラウンドに行った）"));
+    }, 8000); // 8秒でタイムアウト
+
+    try {
+      const connection = joinVoiceChannel({
+        channelId: member.voice.channel.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      });
+
+      connection.once('ready', () => {
+        clearTimeout(timeout);
+        resolve(connection);
+      });
+
+      connection.on('error', err => {
+        clearTimeout(timeout);
+        reject(err);
+      });
+
+    } catch (err) {
+      clearTimeout(timeout);
+      reject(err);
+    }
+  });
+}
+
 // テキスト短縮
 function shortenText(text, limit = 70) {
   return text.length > limit ? text.slice(0, limit) + ' 以下省略。' : text;
@@ -421,6 +451,7 @@ client.once(Events.ClientReady, c => {
   const botVC = guild.members.me?.voice?.channelId;
 
 switch (commandName) {
+    /* 10.9
   case 'ik-join':
     await interaction.deferReply();
 
@@ -448,6 +479,29 @@ switch (commandName) {
       await interaction.editReply('VCへの参加に失敗しましたわ。');
     }
     break;
+*/
+    case 'ik-join':
+  await interaction.deferReply();
+  if (voiceConnections[guildId]) {
+    await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+    return;
+  }
+
+  const userVC = member.voice?.channel;
+  if (!userVC) {
+    await interaction.editReply('先にお前がVC入ってから言いませんこと？ｗｗ');
+    return;
+  }
+
+  try {
+    voiceConnections[guildId] = await safeJoinVoiceChannel(member, guild, interaction);
+    activeChannels[guildId] = interaction.channelId;
+    await interaction.editReply('入ってあげましたわ。');
+  } catch (err) {
+    console.error('VC参加失敗:', err);
+    await interaction.editReply('VCへの参加に失敗しましたわ（join実行後にアプリを離れたりしましたの？）');
+  }
+  break;
 
   case 'ik-kill':
     await interaction.deferReply();
