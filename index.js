@@ -481,35 +481,61 @@ switch (commandName) {
     break;
 */
     case 'ik-join':
-  await interaction.deferReply();
-  if (voiceConnections[guildId]) {
-    await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-    return;
-  }
+    await interaction.deferReply();
 
-  const userVC = member.voice?.channel;
-  if (!userVC) {
-    await interaction.editReply('先にお前がVC入ってから言いませんこと？ｗｗ');
-    return;
-  }
+    if (voiceConnections[guildId]) {
+      await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+      return;
+    }
 
+    if (!userVC) {
+      await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
+      return;
+    }
 
-    
-  try {
-    voiceConnections[guildId] = safejoinVoiceChannel({
+    try {
+      voiceConnections[guildId] = joinVoiceChannel({
         channelId: userVC.id,
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
       });
+// ---- 再接続保護: アプリ切り替えでVCが一時的に切断された時に落ちないように ----
+voiceConnections[guildId].on('stateChange', (oldState, newState) => {
+  console.log(`[VC stateChange] ${oldState.status} -> ${newState.status}`);
+
+  // 接続が切れた・破壊された場合
+  if (newState.status === 'disconnected' || newState.status === 'destroyed') {
+    try {
+      // 少し待ってから再接続を試みる（3秒後）
+      setTimeout(() => {
+        const userVC2 = guild.members.me?.voice?.channel;
+        if (userVC2) {
+          voiceConnections[guildId] = joinVoiceChannel({
+            channelId: userVC2.id,
+            guildId: guild.id,
+            adapterCreator: guild.voiceAdapterCreator,
+          });
+          console.log(`[Rejoin] 再接続成功`);
+        } else {
+          console.log(`[Rejoin] ユーザーVCが見つからず再接続スキップ`);
+        }
+      }, 3000);
+    } catch (err) {
+      console.error(`[Rejoin Error] ${err.message}`);
+      // 失敗した場合もBOTごと落ちないように
+      setTimeout(() => leaveVC(guildId, ''), 2000);
+    }
+  }
+});
 
       activeChannels[guildId] = interaction.channelId;
-    await interaction.editReply('入ってあげましたわ。');
-  } catch (err) {
-    console.error('VC参加失敗:', err);
-    await interaction.editReply('VCへの参加に失敗しましたわ（join実行後にアプリを離れたりしましたの？）');
-  }
-  break;
-
+      await interaction.editReply('入ってあげましたわ。');
+    } catch (err) {
+      console.error('VC参加失敗:', err);
+      await interaction.editReply('VCへの参加に失敗しましたわ。');
+    }
+    break;
+    
   case 'ik-kill':
     await interaction.deferReply();
 
