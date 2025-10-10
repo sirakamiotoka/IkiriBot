@@ -499,11 +499,10 @@ switch (commandName) {
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
       });
-// ---- 再接続保護: アプリ切り替えでVCが一時的に切断された時に落ちないように ----
 voiceConnections[guildId].on('stateChange', (oldState, newState) => {
-  console.log(`[VC stateChange] ${oldState.status} -> ${newState.status}`);
+  //console.log(`[VC stateChange] ${oldState.status} -> ${newState.status}`);
 
-  // 接続が切れた・破壊された場合
+  // 接続が切れた場合
   if (newState.status === 'disconnected' || newState.status === 'destroyed') {
     try {
       // 少し待ってから再接続を試みる（3秒後）
@@ -515,9 +514,9 @@ voiceConnections[guildId].on('stateChange', (oldState, newState) => {
             guildId: guild.id,
             adapterCreator: guild.voiceAdapterCreator,
           });
-          console.log(`[Rejoin] 再接続成功`);
+          // console.log(`[Rejoin] 再接続成功`);
         } else {
-          console.log(`[Rejoin] ユーザーVCが見つからず再接続スキップ`);
+         // console.log(`[Rejoin] ユーザーVCが見つからず再接続スキップ`);
         }
       }, 3000);
     } catch (err) {
