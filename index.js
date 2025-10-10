@@ -493,9 +493,16 @@ switch (commandName) {
     return;
   }
 
+
+    
   try {
-    voiceConnections[guildId] = await safeJoinVoiceChannel(member, guild, interaction);
-    activeChannels[guildId] = interaction.channelId;
+    voiceConnections[guildId] = safejoinVoiceChannel({
+        channelId: userVC.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      });
+
+      activeChannels[guildId] = interaction.channelId;
     await interaction.editReply('入ってあげましたわ。');
   } catch (err) {
     console.error('VC参加失敗:', err);
