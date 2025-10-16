@@ -719,6 +719,7 @@ client.on(Events.MessageCreate, async message => {
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
+    nameMappings[guildId]['激きも音読星人'] = 'げききもおんどくせいじん';
   }
 /*
 07.28コメントアウト
