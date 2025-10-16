@@ -15,13 +15,14 @@ COPY package*.json ./
 RUN rm -rf node_modules package-lock.json
 RUN npm install
 
-COPY . .
 
-# PM2 インストール
-RUN npm install pm2 -g
+
 # 2025-10-16 追加
 RUN npm install @discordjs/voice@latest @discordjs/core@latest
 RUN npm install @snazzah/davey
+COPY . .
+# PM2 インストール
+RUN npm install pm2 -g
 
 EXPOSE 3000
 
