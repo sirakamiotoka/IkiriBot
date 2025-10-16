@@ -1,3 +1,6 @@
+process.on('SIGINT', () => {
+  console.log('[SIGINT] 外部からの割り込みを無視しました');
+});
 process.on('uncaughtException', err => {
   console.error('[Uncaught Exception]', err);
 });
