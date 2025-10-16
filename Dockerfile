@@ -21,6 +21,7 @@ COPY . .
 RUN npm install pm2 -g
 # 2025-10-16 追加
 RUN npm install @discordjs/voice@latest @discordjs/core@latest
+RUN npm install @snazzah/davey
 
 EXPOSE 3000
 
