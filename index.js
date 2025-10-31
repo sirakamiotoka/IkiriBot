@@ -1,6 +1,18 @@
-process.on('SIGINT', () => {
-  console.log('[SIGINT] 外部からの割り込みを無視しました');
+process.on('SIGINT', async () => {
+  console.log('[SIGINT] 終了処理を開始します...');
+  try {
+    // DiscordクライアントとVoice接続を安全に終了
+    if (client) await client.destroy();
+    for (const conn of voiceConnections.values()) {
+      try { conn.destroy(); } catch {}
+    }
+  } catch (err) {
+    console.error('終了処理中にエラー:', err);
+  } finally {
+    process.exit(0);
+  }
 });
+
 process.on('uncaughtException', err => {
   console.error('[Uncaught Exception]', err);
 });
