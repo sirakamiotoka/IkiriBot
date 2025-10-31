@@ -1,4 +1,4 @@
-process.on('SIGINT', async () => {
+process.on('SIGINT', async () => { //10.31
   console.log('[SIGINT] 終了処理を開始します...');
   try {
     // DiscordクライアントとVoice接続を安全に終了
@@ -1141,6 +1141,17 @@ app.listen(port, () => {
     console.error("BOT_TOKEN が .env に設定されていません");
     
   }
+
+  //10.31
+  process.on('exit', () => {
+  for (const player of audioPlayers.values()) {
+    try { player.stop(); } catch {}
+  }
+  for (const conn of voiceConnections.values()) {
+    try { conn.destroy(); } catch {}
+  }
+});
+  
 //09.24
 client.on("guildCreate", async guild => {
   console.log(`新しいサーバーに参加しました: ${guild.name} (${guild.id})`);
@@ -1201,5 +1212,7 @@ client.on('disconnect', event => {
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
+
+
 
 
