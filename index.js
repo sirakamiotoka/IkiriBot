@@ -1,17 +1,32 @@
-process.on('SIGINT', async () => { //10.31
+const voiceConnections = new Map();
+const audioPlayers = new Map();
+process.on('SIGINT', async () => {
   console.log('[SIGINT] 終了処理を開始します...');
   try {
-    // DiscordクライアントとVoice接続を安全に終了
-    if (client) await client.destroy();
-    for (const conn of voiceConnections.values()) {
-      try { conn.destroy(); } catch {}
+    if (voiceConnections instanceof Map) {
+      for (const conn of voiceConnections.values()) {
+        try { conn.destroy(); } catch (e) { console.error('conn.destroy()失敗:', e); }
+      }
     }
+
+    if (audioPlayers instanceof Map) {
+      for (const player of audioPlayers.values()) {
+        try { player.stop(); } catch (e) { console.error('player.stop()失敗:', e); }
+      }
+    }
+
+    if (client && client.destroy) {
+      await client.destroy();
+    }
+
+    console.log('[SIGINT] 終了処理完了');
   } catch (err) {
     console.error('終了処理中にエラー:', err);
   } finally {
     process.exit(0);
   }
 });
+
 
 process.on('uncaughtException', err => {
   console.error('[Uncaught Exception]', err);
