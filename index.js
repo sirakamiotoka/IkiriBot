@@ -73,7 +73,7 @@ client.on('reconnecting', () => console.log('[Reconnecting]'));
 
 // グローバル変数をサーバーごとに管理
 let activeChannels = {};
-let voiceConnections = {};
+//let voiceConnections = {}; //11.07
 const audioQueue = {};
 let isPlaying = {};
 let nameMappings = {};
@@ -83,7 +83,7 @@ const lastSpeakerInfo = {};
 //08.20
 const vcTimeRecording = {}; // guildIdごとにtrue/false
 const vcJoinTimes = {};     // guildIdごとにBOTのVC参加時刻
-const audioPlayers = {}
+//const audioPlayers = {}; //11.07
 
 /* 08.05
 client.once(Events.ClientReady, async () => {
