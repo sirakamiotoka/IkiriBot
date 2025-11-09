@@ -72,7 +72,8 @@ client.on('disconnect', event => console.warn('[Disconnected]', event));
 client.on('reconnecting', () => console.log('[Reconnecting]'));
 
 // グローバル変数をサーバーごとに管理
-let activeChannels = {};
+//　let activeChannels = {}; //11.09
+const activeChannels = new Map();
 //let voiceConnections = {}; //11.07
 const audioQueue = {};
 let isPlaying = {};
