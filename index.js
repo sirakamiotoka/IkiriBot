@@ -2,21 +2,46 @@ const voiceConnections = new Map();
 const audioPlayers = new Map();
 process.on('SIGINT', async () => {
   console.log('[SIGINT] 終了処理を開始します...');
-  try {
-    if (voiceConnections instanceof Map) {
-      for (const conn of voiceConnections.values()) {
-        try { conn.destroy(); } catch (e) { console.error('conn.destroy()失敗:', e); }
-      }
-    }
 
+  try {
+    // --- AudioPlayer の停止 ---
     if (audioPlayers instanceof Map) {
       for (const player of audioPlayers.values()) {
-        try { player.stop(); } catch (e) { console.error('player.stop()失敗:', e); }
+        try {
+          player.stop(true);         // 内部ストリームまで完全停止
+          player.removeAllListeners();
+        } catch (e) {
+          console.error('player.stop()失敗:', e);
+        }
       }
     }
 
+    // --- VoiceConnection の破棄 ---
+    if (voiceConnections instanceof Map) {
+      for (const conn of voiceConnections.values()) {
+        try {
+          conn.destroy();
+        } catch (e) {
+          console.error('conn.destroy()失敗:', e);
+        }
+      }
+    }
+
+    // --- Discordクライアント終了 ---
     if (client && client.destroy) {
-      await client.destroy();
+      try {
+        await client.destroy();
+      } catch (e) {
+        console.error('client.destroy()失敗:', e);
+      }
+    }
+
+    // --- 残っているタイマーの全解除（重要） ---
+    if (global.clearableTimers) {
+      for (const t of global.clearableTimers) {
+        clearInterval(t);
+        clearTimeout(t);
+      }
     }
 
     console.log('[SIGINT] 終了処理完了');
@@ -26,6 +51,7 @@ process.on('SIGINT', async () => {
     process.exit(0);
   }
 });
+
 
 
 process.on('uncaughtException', err => {
