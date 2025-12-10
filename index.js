@@ -194,20 +194,24 @@ function saveSettings() {
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
   const userMentionRegex = /<@!?(\d+)>/g;
+
+  // メンションを名前に置換
   text = text.replace(userMentionRegex, (match, userId) => {
     const member = guild.members.cache.get(userId);
     return member ? `指名、${member.displayName}、` : '誰か';
   });
 
+  // 〜 → から
   text = text.replace(/[〜～~]/g, 'から');
-  return text
-    .replace(/<a?:\w+:\d+>/g, '')
-    .replace(/白神/g, 'しらかみ')
-  　.replace(/イキリ激きも音読星人/g, 'いきりげききもおんどくせいじん')
-    .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる')
-    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n.]/gu, '');
-    
-    .trim();
+
+  text = text
+    .replace(/<a?:\w+:\d+>/g, '')                               // カスタム絵文字削除
+    .replace(/白神/g, 'しらかみ')                               // 白神 → しらかみ
+    .replace(/イキリ激きも音読星人/g, 'いきりげききもおんどくせいじん') // 固有名詞読み替え
+    .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる')       // URL
+    .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n.]/gu, '');            // 記号類除去
+
+  return text.trim();
 }
 
 async function safeJoinVoiceChannel(member, guild, interaction) { //10.09
