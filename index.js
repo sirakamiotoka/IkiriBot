@@ -202,8 +202,11 @@ async function sanitizeText(text, guild) {
   text = text.replace(/[〜～~]/g, 'から');
   return text
     .replace(/<a?:\w+:\d+>/g, '')
+    .replace(/白神/g, 'しらかみ');
+  　.replace(/イキリ激きも音読星人/g, 'いきりげききもおんどくせいじん');
     .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる')
     .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n.]/gu, '')
+    
     .trim();
 }
 
