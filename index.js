@@ -1,5 +1,9 @@
-const voiceConnections = new Map();
-const audioPlayers = new Map();
+// index.js — Map 統一版（VC / 再生まわりのみ Map 化）
+// 元ファイル参照: :contentReference[oaicite:1]{index=1}
+
+const voiceConnections = new Map(); // guildId -> VoiceConnection
+const audioPlayers = new Map();     // guildId -> AudioPlayer
+const audioQueue = new Map();       // guildId -> [{text, file}, ...]
 process.on('SIGINT', async () => {
   console.log('[SIGINT] 終了処理を開始します...');
 
@@ -8,8 +12,9 @@ process.on('SIGINT', async () => {
     if (audioPlayers instanceof Map) {
       for (const player of audioPlayers.values()) {
         try {
-          player.stop(true);         // 内部ストリームまで完全停止
-          player.removeAllListeners();
+          // player.stop(true) を呼べる場合はそのまま
+          try { player.stop(true); } catch { try { player.stop(); } catch {} }
+          try { player.removeAllListeners(); } catch {}
         } catch (e) {
           console.error('player.stop()失敗:', e);
         }
@@ -52,8 +57,6 @@ process.on('SIGINT', async () => {
   }
 });
 
-
-
 process.on('uncaughtException', err => {
   console.error('[Uncaught Exception]', err);
 });
@@ -61,7 +64,7 @@ process.on('unhandledRejection', err => {
   console.error('[Unhandled Rejection]', err);
 });
 
-require('dotenv').config();  
+require('dotenv').config();
 const ffmpegPath = require('ffmpeg-static');
 const ffmpeg = require('fluent-ffmpeg');
 const { StreamType } = require('@discordjs/voice');
@@ -73,8 +76,6 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const gTTS = require('gtts');
-
-
 
 process.on('uncaughtException', err => {
   console.error('[Uncaught Exception]', err);
@@ -98,37 +99,14 @@ client.on('disconnect', event => console.warn('[Disconnected]', event));
 client.on('reconnecting', () => console.log('[Reconnecting]'));
 
 // グローバル変数をサーバーごとに管理
-//　let activeChannels = {}; //11.09
 const activeChannels = new Map();
-//let voiceConnections = {}; //11.07
-const audioQueue = {};
 let isPlaying = {};
 let nameMappings = {};
 let speakUserName = {}; //07.24
-const lastSpeakerInfo = {}; 
-// const speechSpeed = {}; //07.29
+const lastSpeakerInfo = {};
 //08.20
 const vcTimeRecording = {}; // guildIdごとにtrue/false
 const vcJoinTimes = {};     // guildIdごとにBOTのVC参加時刻
-//const audioPlayers = {}; //11.07
-
-/* 08.05
-client.once(Events.ClientReady, async () => {
-  console.log(`Logged in as ${client.user.tag}`);
-  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  try {
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, TARGET_GUILD_ID),
-      { body: ikCommands }
-    );
-    console.log('Slash commands registered for guild');
-  } catch (err) {
-    console.error('Slash command registration failed:', err);
-  }
-});
-*/
-//08.04↓
-// 定義したいスラッシュコマンド一覧
 
 const ikCommands = [
   new SlashCommandBuilder()
@@ -151,20 +129,20 @@ const ikCommands = [
           { name: 'off', value: 'off' }
         )
     ),
-  //08.20
-new SlashCommandBuilder()
-  .setName('ik-vctimerecording')
-  .setDescription('BOTのVC滞在時間を記録します。')
-  .addStringOption(option =>
-    option.setName('mode')
-      .setDescription('on または off')
-      .setRequired(true)
-      .addChoices(
-        { name: 'on', value: 'on' },
-        { name: 'off', value: 'off' }
-      )
-  ),
-  
+
+  new SlashCommandBuilder()
+    .setName('ik-vctimerecording')
+    .setDescription('BOTのVC滞在時間を記録します。')
+    .addStringOption(option =>
+      option.setName('mode')
+        .setDescription('on または off')
+        .setRequired(true)
+        .addChoices(
+          { name: 'on', value: 'on' },
+          { name: 'off', value: 'off' }
+        )
+    ),
+
   new SlashCommandBuilder()
     .setName('ik-addword')
     .setDescription('読み間違えてる部分を変えてあげます')
@@ -188,15 +166,7 @@ new SlashCommandBuilder()
   new SlashCommandBuilder()
     .setName('ik-wordlist')
     .setDescription('登録されている誤読修正一覧を表示します'),
-
-//  new SlashCommandBuilder()
-//    .setName('ik-help')
-//    .setDescription('助けを乞います'),
-
 ].map(cmd => cmd.toJSON());
-
-/*client.on(Events.InteractionCreate, async interaction => {
-});*/
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
 
@@ -213,15 +183,14 @@ function loadServerConfigs() {
   }
 }
 
-// 設定ファイルに保存する 08.27
 function saveSettings() {
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(serverConfigs, null, 2), 'utf8');
-    //console.log('設定ファイルを保存しました');
   } catch (err) {
     console.error('設定ファイルの保存に失敗しました:', err);
   }
 }
+
 // テキストのサニタイズ
 async function sanitizeText(text, guild) {
   const userMentionRegex = /<@!?(\d+)>/g;
@@ -282,6 +251,7 @@ function replaceDotWithTen(text) {
     return `${numToKanji(intPart)}てん${numToKanji(decimalPart)}`;
   });
 }
+
 // gTTSで音声生成
 async function speakText(text, lang = 'ja', filepath) {
   return new Promise((resolve, reject) => {
@@ -299,11 +269,9 @@ async function speakText(text, lang = 'ja', filepath) {
 
 const { spawn } = require('child_process');
 
-
- // ffmpegでMP3をリニアPCMに変換し、標準出力のストリームとして返す
-
+// ffmpegでMP3をリニアPCMに変換し、標準出力のストリームとして返す
 function convertToPCMStream(mp3Path) {
-  const ffmpeg = spawn(ffmpegPath, [
+  const ffmpegProc = spawn(ffmpegPath, [
     '-i', mp3Path,
     '-f', 's16le',
     '-ar', '48000',
@@ -312,17 +280,16 @@ function convertToPCMStream(mp3Path) {
     'pipe:1'
   ]);
 
-  ffmpeg.stderr.on('data', (data) => {
+  ffmpegProc.stderr.on('data', (data) => {
     // console.log(`ffmpeg stderr: ${data}`); // ←デバッグ時だけ表示
   });
 
-  ffmpeg.on('error', (err) => {
+  ffmpegProc.on('error', (err) => {
     console.error(`ffmpeg スポーン失敗: ${err.message}`);
   });
 
-  return ffmpeg.stdout;
+  return ffmpegProc.stdout;
 }
-
 
 async function convertToPCM(mp3Path, pcmPath) {
   return new Promise((resolve, reject) => {
@@ -333,7 +300,6 @@ async function convertToPCM(mp3Path, pcmPath) {
         '-ac 2'              // ステレオ
       ])
       .audioFilters('atempo=1.35') //07.29追加
-      
       .save(pcmPath)
       .on('end', () => resolve(pcmPath))
       .on('error', (err) => {
@@ -343,25 +309,23 @@ async function convertToPCM(mp3Path, pcmPath) {
   });
 }
 
-
-
-// 音声再生関数
-
-// 08.27 追加
+// 音声再生関数（Map 化に合わせて書き換え）
 const queueLocks = {};
 
 async function playNextInQueue(guildId) {
+  // queueLocks はオブジェクトのまま（小さなキーセット）
   if (queueLocks[guildId]) return;
   queueLocks[guildId] = true;
 
   try {
+    // while 条件を Map 用に修正
     while (
-      audioQueue[guildId] &&
-      audioQueue[guildId].length > 0 &&
-      voiceConnections[guildId] &&
-      voiceConnections[guildId].state.status !== 'destroyed'
+      audioQueue.has(guildId) &&
+      audioQueue.get(guildId).length > 0 &&
+      voiceConnections.has(guildId) &&
+      voiceConnections.get(guildId).state.status !== 'destroyed'
     ) {
-      const { text, file } = audioQueue[guildId].shift();
+      const { text, file } = audioQueue.get(guildId).shift();
 
       try {
         // gTTSを非同期生成
@@ -372,19 +336,25 @@ async function playNextInQueue(guildId) {
 
         // Discordで再生
         const player = createAudioPlayer();
-        audioPlayers[guildId] = player;
+        audioPlayers.set(guildId, player); // Map に保存
         const resource = createAudioResource(stream, {
           inputType: StreamType.Raw,
           inlineVolume: true
         });
-        resource.volume.setVolume(0.8);
+        try { resource.volume.setVolume(0.8); } catch {}
         player.play(resource);
 
         if (
-          voiceConnections[guildId] &&
-          voiceConnections[guildId].state.status !== 'destroyed'
+          voiceConnections.has(guildId) &&
+          voiceConnections.get(guildId).state.status !== 'destroyed'
         ) {
-          voiceConnections[guildId].subscribe(player);
+          try {
+            voiceConnections.get(guildId).subscribe(player);
+          } catch (e) {
+            // subscribe が失敗した場合はファイルを削除してループ抜け
+            fs.unlink(file, () => {});
+            break;
+          }
         } else {
           fs.unlink(file, () => {});
           break;
@@ -414,10 +384,8 @@ async function playNextInQueue(guildId) {
   }
 }
 
-
-
 // 誤読修正
-function correctNamePronunciation(name, guildId) {
+function correctNamePronunciation(name = '', guildId) {
   const nameMapping = nameMappings[guildId] || {};
   for (const [incorrectName, correctReading] of Object.entries(nameMapping)) {
     if (name.includes(incorrectName)) {
@@ -440,7 +408,7 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
       (minutes > 0 ? `${minutes}分` : '') +
       `${seconds}秒`;
 
-    const textChannel = client.channels.cache.get(activeChannels[guildId]);
+    const textChannel = client.channels.cache.get(activeChannels.get(guildId));
     if (textChannel?.isTextBased()) {
       textChannel.send(`BOTは${durationString}ほどVCで労働させられていましたわ。疲れましたわ。`);
     }
@@ -449,57 +417,59 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
   }
 
   // 再生中断
-  if (audioPlayers[guildId]) {
+  if (audioPlayers.has(guildId)) {
     try {
-      audioPlayers[guildId].stop(true); // trueで現在の再生も止める
+      audioPlayers.get(guildId).stop(true); // trueで現在の再生も止める
     } catch (err) {
       console.warn(`プレイヤー停止エラー: ${err.message}`);
       console.warn(`自動再起動を実行します`);
-     // //process.exit(1); 
+      // process.exit は呼ばない（PM2 が管理する）
     }
   }
 
   // 残りの未処理ファイル削除
-  if (audioQueue[guildId]) {
-    for (const item of audioQueue[guildId]) {
+  if (audioQueue.has(guildId)) {
+    for (const item of audioQueue.get(guildId)) {
       fs.unlink(item.file, err => {
         if (err) {
           console.warn(`未処理ファイル削除失敗: ${item.file} (${err.message})`);
           console.warn(`自動再起動を実行します`);
-          //process.exit(1); 
+          // process.exit は呼ばない
         }
       });
     }
-    audioQueue[guildId] = [];
+    audioQueue.set(guildId, []);
   }
   isPlaying[guildId] = false;
 
   // VC切断
-  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed') {
-    voiceConnections[guildId].destroy();
-    voiceConnections[guildId] = null;
+  if (voiceConnections.has(guildId) && voiceConnections.get(guildId).state.status !== 'destroyed') {
+    try {
+      voiceConnections.get(guildId).destroy();
+    } catch (e) {
+      console.error('destroy エラー:', e);
+    }
+    voiceConnections.delete(guildId);
   }
 
   // テキスト通知
-  if (activeChannels[guildId]) {
-    const textChannel = client.channels.cache.get(activeChannels[guildId]);
+  if (activeChannels.has(guildId)) {
+    const textChannel = client.channels.cache.get(activeChannels.get(guildId));
     if (textChannel?.isTextBased() && reasonText !== '') {
       textChannel.send(reasonText);
     }
-    activeChannels[guildId] = null;
+    activeChannels.delete(guildId);
   }
 }
 
-
-
 // Bot起動時
 client.once(Events.ClientReady, c => {
-  loadServerConfigs(); 
+  loadServerConfigs();
   console.log(`(${c.user.tag}) が起動しましたわ！`);
 });
 
-//08.05スラッシュコマンド
-  client.on(Events.InteractionCreate, async interaction => {
+// Interaction / Slash handling
+client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName, guildId, guild, member } = interaction;
@@ -514,299 +484,257 @@ client.once(Events.ClientReady, c => {
   const userVC = member.voice?.channel;
   const botVC = guild.members.me?.voice?.channelId;
 
-switch (commandName) {
-    /* 10.9
-  case 'ik-join':
-    await interaction.deferReply();
-
-    if (voiceConnections[guildId]) {
-      await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-      return;
-    }
-
-    if (!userVC) {
-      await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-      return;
-    }
-
-    try {
-      voiceConnections[guildId] = joinVoiceChannel({
-        channelId: userVC.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-      });
-
-      activeChannels[guildId] = interaction.channelId;
-      await interaction.editReply('入ってあげましたわ。');
-    } catch (err) {
-      console.error('VC参加失敗:', err);
-      await interaction.editReply('VCへの参加に失敗しましたわ。');
-    }
-    break;
-*/
+  switch (commandName) {
     case 'ik-join':
-    await interaction.deferReply();
+      await interaction.deferReply();
 
-    if (voiceConnections[guildId]) {
-      await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-      return;
-    }
+      if (voiceConnections.has(guildId)) {
+        await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
+        return;
+      }
 
-    if (!userVC) {
-      await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-      return;
-    }
+      if (!userVC) {
+        await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
+        return;
+      }
 
-    try {
-      voiceConnections[guildId] = joinVoiceChannel({
-        channelId: userVC.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-      });
-voiceConnections[guildId].on('stateChange', (oldState, newState) => {
-  //console.log(`[VC stateChange] ${oldState.status} -> ${newState.status}`);
+      try {
+        const conn = joinVoiceChannel({
+          channelId: userVC.id,
+          guildId: guild.id,
+          adapterCreator: guild.voiceAdapterCreator,
+        });
+        // Map に格納
+        voiceConnections.set(guildId, conn);
 
-  // 接続が切れた場合
-  if (newState.status === 'disconnected' || newState.status === 'destroyed') {
-    try {
-      // 少し待ってから再接続を試みる（3秒後）
-      setTimeout(() => {
-        const userVC2 = guild.members.me?.voice?.channel;
-        if (userVC2) {
-          voiceConnections[guildId] = joinVoiceChannel({
-            channelId: userVC2.id,
-            guildId: guild.id,
-            adapterCreator: guild.voiceAdapterCreator,
+        // stateChange の監視（元のロジックを維持）
+        try {
+          conn.on('stateChange', (oldState, newState) => {
+            if (newState.status === 'disconnected' || newState.status === 'destroyed') {
+              try {
+                setTimeout(() => {
+                  const userVC2 = guild.members.me?.voice?.channel;
+                  if (userVC2) {
+                    // 再接続処理：新しい接続を作り Map に保存
+                    const newConn = joinVoiceChannel({
+                      channelId: userVC2.id,
+                      guildId: guild.id,
+                      adapterCreator: guild.voiceAdapterCreator,
+                    });
+                    voiceConnections.set(guildId, newConn);
+                    // console.log(`[Rejoin] 再接続成功`);
+                  } else {
+                    // console.log(`[Rejoin] ユーザーVCが見つからず再接続スキップ`);
+                  }
+                }, 3000);
+              } catch (err) {
+                console.error(`[Rejoin Error] ${err.message}`);
+                setTimeout(() => leaveVC(guildId, ''), 2000);
+              }
+            }
           });
-          // console.log(`[Rejoin] 再接続成功`);
-        } else {
-         // console.log(`[Rejoin] ユーザーVCが見つからず再接続スキップ`);
+        } catch (e) {
+          // on が使えない場合もあるが無視
         }
-      }, 3000);
-    } catch (err) {
-      console.error(`[Rejoin Error] ${err.message}`);
-      // 失敗した場合もBOTごと落ちないように
-      setTimeout(() => leaveVC(guildId, ''), 2000);
-    }
-  }
-});
 
-      activeChannels[guildId] = interaction.channelId;
-      await interaction.editReply('入ってあげましたわ。');
-    } catch (err) {
-      console.error('VC参加失敗:', err);
-      await interaction.editReply('VCへの参加に失敗しましたわ。');
-    }
-    break;
-    
-  case 'ik-kill':
-    await interaction.deferReply();
+        activeChannels.set(guildId, interaction.channelId);
+        await interaction.editReply('入ってあげましたわ。');
+      } catch (err) {
+        console.error('VC参加失敗:', err);
+        await interaction.editReply('VCへの参加に失敗しましたわ。');
+      }
+      break;
 
-    if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-      if (botVC && userVC?.id === botVC) {
-        await interaction.editReply('は？何してくれやがりますの？');
+    case 'ik-kill':
+      await interaction.deferReply();
+
+      if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state?.status !== 'destroyed' && activeChannels.has(guildId)) {
+        if (botVC && userVC?.id === botVC) {
+          await interaction.editReply('は？何してくれやがりますの？');
+          leaveVC(guildId, '');
+        } else {
+          await interaction.editReply('同じVCにいない君には命令権限はありませんわｗｗ');
+        }
+      } else {
+        await interaction.editReply('どこにも繋いでないですわねwざんねん！w');
+      }
+      break;
+
+    case 'ik-vctimerecording':
+      await interaction.deferReply();
+      const timermode = interaction.options.getString('mode');
+
+      if (vcTimeRecording[guildId] === undefined) {
+        vcTimeRecording[guildId] = true;
+        saveSettings();
+      }
+
+      if (timermode === 'on') {
+        if (vcTimeRecording[guildId] === true) {
+          await interaction.editReply('既にonですわよ？ｗ');
+        } else {
+          vcTimeRecording[guildId] = true;
+          saveSettings();
+          const botMember = guild.members.me;
+          const botVCid = botMember.voice.channelId;
+          if (botVCid) {
+            vcJoinTimes[guildId] = new Date();
+          }
+          await interaction.editReply('VC滞在時間の記録を開始しましたわ。');
+        }
+      } else if (timermode === 'off') {
+        vcTimeRecording[guildId] = false;
+        vcJoinTimes[guildId] = null;
+        saveSettings();
+        await interaction.editReply('VC滞在時間の記録を停止しましたわ。');
+      } else {
+        await interaction.editReply('modeは `on` または `off` を指定してくださいませ。');
+      }
+      break;
+
+    case 'ik-absolutekill':
+      await interaction.deferReply();
+      if (userId !== '1289133629972418613') {
+        await interaction.editReply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
+        return;
+      }
+
+      if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state?.status !== 'destroyed' && activeChannels.has(guildId)) {
+        await interaction.editReply('は？強制切断されましたわ。');
         leaveVC(guildId, '');
       } else {
-        await interaction.editReply('同じVCにいない君には命令権限はありませんわｗｗ');
+        await interaction.editReply('今はどこにも繋がっていませんわ。');
       }
-    } else {
-      await interaction.editReply('どこにも繋いでないですわねwざんねん！w');
-    }
-    break;
+      break;
 
-    //08.20
-  case 'ik-vctimerecording': 
-  await interaction.deferReply();
-  const timermode = interaction.options.getString('mode');
-  
-  // デフォルト値: 未設定なら true にして保存
-  if (vcTimeRecording[guildId] === undefined) {
-    vcTimeRecording[guildId] = true;
-    saveSettings();
-  }
-
-  if (timermode === 'on') {
-    if (vcTimeRecording[guildId] === true) {
-      await interaction.editReply('既にonですわよ？ｗ');
-    } else {
-      vcTimeRecording[guildId] = true;
-      saveSettings();
-      // 現在BOTがVCにいる場合は時間開始
-      const botMember = guild.members.me;
-      const botVCid = botMember.voice.channelId;
-      if (botVCid) {
-        vcJoinTimes[guildId] = new Date();
+    case 'ik-stcheck':
+      await interaction.deferReply();
+      if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state) {
+        await interaction.editReply(`voiceConnections: ${voiceConnections.get(guildId).state.status}\nactiveChannel: ${activeChannels.get(guildId)}`);
+      } else {
+        await interaction.editReply('状態確認を拒否しますわ');
       }
-      await interaction.editReply('VC滞在時間の記録を開始しましたわ。');
-    }
-  } else if (timermode === 'off') {
-    vcTimeRecording[guildId] = false;
-    vcJoinTimes[guildId] = null;
-    saveSettings();
-    await interaction.editReply('VC滞在時間の記録を停止しましたわ。');
-  } else {
-    // 引数がon/off以外
-    await interaction.editReply('modeは `on` または `off` を指定してくださいませ。');
+      break;
+
+    case 'ik-namespeak':
+      await interaction.deferReply();
+
+      if (speakUserName[guildId] === undefined) {
+        speakUserName[guildId] = true;
+        saveSettings();
+      }
+      {
+        const mode = interaction.options.getString('mode');
+        const current = speakUserName[guildId];
+        if ((mode === 'on' && current === true) || (mode === 'off' && current === false)) {
+          await interaction.editReply(
+            mode === 'on'
+              ? 'すでにonになってますわよ？ｗ'
+              : 'すでにoffになってますわよ？ｗ'
+          );
+        } else {
+          speakUserName[guildId] = (mode === 'on');
+          saveSettings();
+          await interaction.editReply(
+            mode === 'on'
+              ? '名前も呼んであげますわ。光栄に思いなさいｗ'
+              : 'もう名前は呼んであげませんわｗ'
+          );
+        }
+      }
+      break;
+
+    case 'ik-addword':
+      await interaction.deferReply();
+      {
+        const NGyomi = interaction.options.getString('間違ってる読み');
+        const OKyomi = interaction.options.getString('正しい読み');
+        if (!nameMappings[guildId]) nameMappings[guildId] = {};
+        if (nameMappings[guildId][NGyomi]) {
+          await interaction.editReply(`${NGyomi} はすでに登録されてますわボケ。`);
+        } else {
+          nameMappings[guildId][NGyomi] = OKyomi;
+          saveSettings();
+          await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${NGyomi} → ${OKyomi}`);
+        }
+      }
+      break;
+
+    case 'ik-removeword':
+      await interaction.deferReply();
+      {
+        const toRemove = interaction.options.getString('読み');
+        if (nameMappings[guildId]?.[toRemove]) {
+          delete nameMappings[guildId][toRemove];
+          await interaction.editReply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
+        } else {
+          await interaction.editReply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
+        }
+      }
+      break;
+
+    case 'ik-wordlist':
+      await interaction.deferReply();
+      {
+        const mappings = nameMappings[guildId];
+        if (!mappings || Object.keys(mappings).length === 0) {
+          await interaction.editReply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
+        } else {
+          const list = Object.entries(mappings)
+            .map(([k, v]) => `${k} → ${v}`)
+            .join('\n');
+          await interaction.editReply(`単語リスト:\n${list}`);
+        }
+      }
+      break;
+
+    case 'ik-help':
+      await interaction.deferReply();
+      await interaction.editReply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
+      break;
+
+    default:
+      await interaction.deferReply();
+      await interaction.editReply('そのコマンドには対応しておりませんわ。');
+      break;
   }
-  break;
-
-
-  case 'ik-absolutekill':
-    await interaction.deferReply();
-
-    if (userId !== '1289133629972418613') {
-      await interaction.editReply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
-      return;
-    }
-
-    if (voiceConnections[guildId]?.state.status !== 'destroyed' && activeChannels[guildId]) {
-      await interaction.editReply('は？強制切断されましたわ。');
-      leaveVC(guildId, '');
-    } else {
-      await interaction.editReply('今はどこにも繋がっていませんわ。');
-    }
-    break;
-
-  case 'ik-stcheck':
-    await interaction.deferReply();
-
-    if (voiceConnections[guildId]?.state) {
-      await interaction.editReply(`voiceConnections: ${voiceConnections[guildId].state.status}\nactiveChannel: ${activeChannels[guildId]}`);
-    } else {
-      await interaction.editReply('状態確認を拒否しますわ');
-    }
-    break;
-
-  case 'ik-namespeak':
-  await interaction.deferReply();
-
-    if (speakUserName[guildId] === undefined) {
-    speakUserName[guildId] = true; // デフォルトはON
-    saveSettings();
-  }
-  const mode = interaction.options.getString('mode'); // "on"か"off"
-  const current = speakUserName[guildId];
-
-  if ((mode === 'on' && current === true) || (mode === 'off' && current === false)) {
-    await interaction.editReply(
-      mode === 'on'
-        ? 'すでにonになってますわよ？ｗ'
-        : 'すでにoffになってますわよ？ｗ'
-    );
-  } else {
-    speakUserName[guildId] = (mode === 'on');
-    saveSettings();
-    await interaction.editReply(
-      mode === 'on'
-        ? '名前も呼んであげますわ。光栄に思いなさいｗ'
-        : 'もう名前は呼んであげませんわｗ'
-    );
-  }
-  break;
-
-
-  case 'ik-addword':
-    await interaction.deferReply();
-
-    const NGyomi = interaction.options.getString('間違ってる読み');
-    const OKyomi = interaction.options.getString('正しい読み');
-    if (!nameMappings[guildId]) nameMappings[guildId] = {};
-    if (nameMappings[guildId][NGyomi]) {
-      await interaction.editReply(`${NGyomi} はすでに登録されてますわボケ。`);
-    } else {
-      nameMappings[guildId][NGyomi] = OKyomi;
-      saveSettings();
-      await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${NGyomi} → ${OKyomi}`);
-    }
-    break;
-
-  case 'ik-removeword':
-    await interaction.deferReply();
-
-    const toRemove = interaction.options.getString('読み');
-    if (nameMappings[guildId]?.[toRemove]) {
-      delete nameMappings[guildId][toRemove];
-      await interaction.editReply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
-    } else {
-      await interaction.editReply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
-    }
-    break;
-
-  case 'ik-wordlist':
-    await interaction.deferReply();
-
-    const mappings = nameMappings[guildId];
-    if (!mappings || Object.keys(mappings).length === 0) {
-      await interaction.editReply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
-    } else {
-      const list = Object.entries(mappings)
-        .map(([k, v]) => `${k} → ${v}`)
-        .join('\n');
-      await interaction.editReply(`単語リスト:\n${list}`);
-    }
-    break;
-
-  case 'ik-help':
-    await interaction.deferReply();
-    await interaction.editReply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
-    break;
-
-  default:
-    await interaction.deferReply();
-    await interaction.editReply('そのコマンドには対応しておりませんわ。');
-    break;
-}
 });
-
-
-  //08.05end
 
 // メッセージ処理
 client.on(Events.MessageCreate, async message => {
-  
   if (message.author.bot) return;
   const content = message.content;
   const guildId = message.guild.id;
 
   if (!speakUserName[guildId]) speakUserName[guildId] = false; // 07.24
-  
+
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
     nameMappings[guildId]['激きも音読星人'] = 'げききもおんどくせいじん';
   }
-/*
-07.28コメントアウト
+
+  // /ik.kill の処理（メッセージ版）
   if (content === '/ik.kill') {
-    if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
-      leaveVC(guildId, 'は？何してくれやがりますの？');
+    const botVC = message.guild.members.me?.voice?.channelId;
+    const userVC = message.member.voice?.channelId;
+
+    if (voiceConnections.has(guildId) && voiceConnections.get(guildId).state.status !== 'destroyed' && activeChannels.has(guildId)) {
+      if (botVC && botVC === userVC) {
+        leaveVC(guildId, 'は？何してくれやがりますの？');
+      } else {
+        message.reply('同じVCにいない君には命令権限はありませんわｗｗ');
+      }
     } else {
       message.reply('どこにも繋いでないですわねwざんねん！w');
     }
     return;
   }
-*/
-  // 修正後
-if (content === '/ik.kill') {
-  const botVC = message.guild.members.me?.voice?.channelId;
-  const userVC = message.member.voice?.channelId;
 
-  if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
-    if (botVC && botVC === userVC) {
-      leaveVC(guildId, 'は？何してくれやがりますの？');
-    } else {
-      message.reply('同じVCにいない君には命令権限はありませんわｗｗ');
-    }
-  } else {
-    message.reply('どこにも繋いでないですわねwざんねん！w');
-  }
-  return;
-}
-  
   if (content === '/ik.absolutekill') {
     const allowedUserId = '1289133629972418613';
     if (message.author.id === allowedUserId) {
-      if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
+      if (voiceConnections.has(guildId) && voiceConnections.get(guildId).state.status !== 'destroyed' && activeChannels.has(guildId)) {
         leaveVC(guildId, 'は？強制切断されましたわ。');
       } else {
         message.reply('今はどこにも繋がっていませんわ。');
@@ -818,7 +746,7 @@ if (content === '/ik.kill') {
   }
 
   if (content === '/ik.join') {
-    if (voiceConnections[guildId]) {
+    if (voiceConnections.has(guildId)) {
       message.reply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
       return;
     }
@@ -826,13 +754,19 @@ if (content === '/ik.kill') {
       message.reply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
       return;
     }
-    voiceConnections[guildId] = joinVoiceChannel({
-      channelId: message.member.voice.channel.id,
-      guildId: message.guild.id,
-      adapterCreator: message.guild.voiceAdapterCreator,
-    });
-    activeChannels[guildId] = message.channel.id;
-    message.reply('入ってあげましたわ。');
+    try {
+      const conn = joinVoiceChannel({
+        channelId: message.member.voice.channel.id,
+        guildId: message.guild.id,
+        adapterCreator: message.guild.voiceAdapterCreator,
+      });
+      voiceConnections.set(guildId, conn);
+      activeChannels.set(guildId, message.channel.id);
+      message.reply('入ってあげましたわ。');
+    } catch (err) {
+      console.error('VC参加失敗 (メッセージ版):', err);
+      message.reply('VCへの参加に失敗しましたわ。');
+    }
     return;
   }
 
@@ -842,9 +776,9 @@ if (content === '/ik.kill') {
   }
 
   if (content === '/ik.stcheck') {
-    if (voiceConnections[guildId] && voiceConnections[guildId].state) {
-      message.reply('voiceConnectionsの今の状態は ' + voiceConnections[guildId].state.status + ' ですわ');
-      message.reply('activeChannelsの今の状態は ' + activeChannels[guildId] + ' ですわ');
+    if (voiceConnections.has(guildId) && voiceConnections.get(guildId).state) {
+      message.reply('voiceConnectionsの今の状態は ' + voiceConnections.get(guildId).state.status + ' ですわ');
+      message.reply('activeChannelsの今の状態は ' + activeChannels.get(guildId) + ' ですわ');
     } else {
       message.reply('状態確認を拒否しますわ');
     }
@@ -856,52 +790,52 @@ if (content === '/ik.kill') {
     return;
   }
 
-  //08.05
+  // コマンド登録（/ik.commandset など）の部分は元のまま
   if (content === '/ik.commandset') {
-  if (!guildId) {
-    message.reply('このコマンドはサーバー内でのみ使えますわ。');
+    if (!guildId) {
+      message.reply('このコマンドはサーバー内でのみ使えますわ。');
+      return;
+    }
+
+    if (content === '/ik.commandremove') {
+      if (!guildId) {
+        message.reply('このコマンドはサーバー内でのみ使えますわ。');
+        return;
+      }
+
+      const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+      const CLIENT_ID = client.application.id;
+
+      try {
+        await rest.put(
+          Routes.applicationGuildCommands(CLIENT_ID, guildId),
+          { body: [] } // ← コマンドリストを空にする
+        );
+
+        message.reply(`このサーバー（${message.guild.name}）のコマンドを全部消し飛ばして差し上げましたわｗ`);
+      } catch (err) {
+        console.error('スラッシュコマンド削除エラー:', err);
+        message.reply('削除中にエラーが発生しましたわ。');
+      }
+
+      return;
+    }
+
+    const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+    const CLIENT_ID = client.application.id;
+    try {
+      await rest.put(
+        Routes.applicationGuildCommands(CLIENT_ID, guildId),
+        { body: ikCommands }
+      );
+
+      message.reply(`このサーバー（${message.guild.name}）にコマンドを登録してあげましたわｗ`);
+    } catch (err) {
+      console.error('スラッシュコマンド登録エラー:', err);
+      message.reply('登録中にエラーが発生しましたわ。');
+    }
     return;
   }
-    
-if (content === '/ik.commandremove') {
-  if (!guildId) {
-    message.reply('このコマンドはサーバー内でのみ使えますわ。');
-    return;
-  }
-
-  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  const CLIENT_ID = client.application.id;
-
-  try {
-    await rest.put(
-      Routes.applicationGuildCommands(CLIENT_ID, guildId),
-      { body: [] } // ← コマンドリストを空にする
-    );
-
-    message.reply(`このサーバー（${message.guild.name}）のコマンドを全部消し飛ばして差し上げましたわｗ`);
-  } catch (err) {
-    console.error('スラッシュコマンド削除エラー:', err);
-    message.reply('削除中にエラーが発生しましたわ。');
-  }
-
-  return;
-  
-}
-  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-　const CLIENT_ID = client.application.id;
-  try {
-    await rest.put(
-      Routes.applicationGuildCommands(CLIENT_ID, guildId),
-      { body: ikCommands }
-    );
-
-    message.reply(`このサーバー（${message.guild.name}）にコマンドを登録してあげましたわｗ`);
-  } catch (err) {
-    console.error('スラッシュコマンド登録エラー:', err);
-    message.reply('登録中にエラーが発生しましたわ。');
-  }
-  return;
-}//08.05　
 
   if (content.startsWith('/ik.addword')) {
     const args = content.split(' ').slice(1);
@@ -947,106 +881,64 @@ if (content === '/ik.commandremove') {
     }
     return;
   }
-// 07.24追加
+
   if (content === '/ik.namespeak on') {
-  speakUserName[guildId] = true;
-  message.reply('名前も呼んであげますわ。光栄に思いなさいｗ');
-  return;
-}
+    speakUserName[guildId] = true;
+    message.reply('名前も呼んであげますわ。光栄に思いなさいｗ');
+    return;
+  }
 
-if (content === '/ik.namespeak off') {
-  speakUserName[guildId] = false;
-  message.reply('もう名前は呼んであげませんわw');
-  return;
-}
+  if (content === '/ik.namespeak off') {
+    speakUserName[guildId] = false;
+    message.reply('もう名前は呼んであげませんわw');
+    return;
+  }
 
-   if (content.startsWith('/ik.namespeak')) {
+  if (content.startsWith('/ik.namespeak')) {
     message.reply('正しいコマンドすら入力できないのですか？ｗ お手本: `/ik.namespeak on` または `/ik.namespeak off`');
     return;
   }
-// 07.24追加終了
 
-  /*
-// 07.29追加
-  if (content.startsWith('/ik.speed')) {
-  const args = content.split(' ').slice(1);
-  if (args.length !== 1) {
-    message.reply(' `/ik.speed 1.0` のように入力してくださいましｗ');
-    return;
-  }
-
-  const speed = parseFloat(args[0]);
-  if (isNaN(speed) || speed < 0.5 || speed > 2.0) {
-    message.reply('読み上げ速度は **0.5〜2.0** の範囲で入力してくださいまし');
-    return;
-  }
-
-  speechSpeed[guildId] = speed;
-  message.reply(`読み上げ速度を ${speed} に変更しましたわ`);
-  return;
-}
-  // 07.29追加終了
-  */
-
-
-
-  
-  //  通常メッセージ読み上げ
+  // 通常メッセージ読み上げ（Map に合わせて参照を修正）
   if (
-    voiceConnections[guildId] &&
-    message.channel.id === activeChannels[guildId] &&
+    voiceConnections.has(guildId) &&
+    message.channel.id === activeChannels.get(guildId) &&
     !content.startsWith('/')
   ) {
-    //08.05
-    
-    let text = await sanitizeText(content, message.guild); // ← 修正ポイント
-    text = replaceDotWithTen(text);  // 08.05
-　　if (message.attachments.size > 0) {
-  　text += ` 、添付ファイル`;
-　　}
-    text = correctNamePronunciation(text, guildId);// 08.05
-text = shortenText(text);// 08.05
+    let text = await sanitizeText(content, message.guild);
+    text = replaceDotWithTen(text);
+    if (message.attachments.size > 0) {
+      text += ` 、添付ファイル`;
+    }
+    text = correctNamePronunciation(text, guildId);
+    text = shortenText(text);
     if (text.length === 0) return;
-    
-/* 
-07.28修正
+
     if (speakUserName[guildId]) {
-    const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
-    text = `${speakerName}、${text}`;
-  }
-*/
+      const speakerId = message.author.id;
+      const now = Date.now();
 
-    //07.28追加
-    if (speakUserName[guildId]) {
-  const speakerId = message.author.id;
-  const now = Date.now();
+      const last = lastSpeakerInfo[guildId];
+      const shouldSpeakName = !last || last.userId !== speakerId || (now - last.timestamp > 20000);
 
-  const last = lastSpeakerInfo[guildId];
-  const shouldSpeakName = !last || last.userId !== speakerId || (now - last.timestamp > 20000); 
+      if (shouldSpeakName) {
+        const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
+        text = `${speakerName}、${text}`;
+      }
 
-  if (shouldSpeakName) {
-    const speakerName = correctNamePronunciation(message.member?.displayName || message.author.username, guildId);
-    text = `${speakerName}、${text}`;
-  }
+      lastSpeakerInfo[guildId] = { userId: speakerId, timestamp: now };
+    }
 
-  lastSpeakerInfo[guildId] = { userId: speakerId, timestamp: now };
-}
-    //追加終了
-    
-    // 誤読修正の適用
     text = correctNamePronunciation(text, guildId);
     text = shortenText(text);
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `message_${uniqueId}.mp3`);
-    
-    if (!audioQueue[guildId]) audioQueue[guildId] = [];
-    audioQueue[guildId].push({ text, file: filePath });
+
+    if (!audioQueue.has(guildId)) audioQueue.set(guildId, []);
+    audioQueue.get(guildId).push({ text, file: filePath });
     playNextInQueue(guildId);
   }
 });
-
-
-
 
 // VC出入り読み上げ
 client.on('voiceStateUpdate', (oldState, newState) => {
@@ -1076,7 +968,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
           (minutes > 0 ? `${minutes}分` : '') +
           `${seconds}秒`;
 
-        const textChannel = client.channels.cache.get(activeChannels[guildId]);
+        const textChannel = client.channels.cache.get(activeChannels.get(guildId));
         if (textChannel && textChannel.isTextBased()) {
           textChannel.send(`BOTは${durationString}ほどVCで労働させられていましたわ。疲れましたわ。`);
         }
@@ -1092,7 +984,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
     return;
   }
 
-  if (!voiceConnections[guildId] || !activeChannels[guildId]) return;
+  if (!voiceConnections.has(guildId) || !activeChannels.has(guildId)) return;
 
   // Botの現在のVC
   const botMember = newState.guild.members.me;
@@ -1106,70 +998,66 @@ client.on('voiceStateUpdate', (oldState, newState) => {
   ) {
     return;
   }
- // 追加終了
 
-// 修正後↓
   let text = null;
-if (!oldState.channel && newState.channel && newState.channelId === currentVC.id) {
-  const member = newState.member || newState.guild.members.cache.get(newState.id);
-  const correctedName = correctNamePronunciation(member?.displayName, guildId);
-  text = `${correctedName}が侵入しましたわね。`;
-} else if (oldState.channel && !newState.channel && oldState.channelId === currentVC.id) {
-  const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
-  const correctedName = correctNamePronunciation(member?.displayName, guildId);
-  text = `${correctedName}がくたばりました。`;
-}
-  
-  
+  if (!oldState.channel && newState.channel && newState.channelId === currentVC.id) {
+    const member = newState.member || newState.guild.members.cache.get(newState.id);
+    const correctedName = correctNamePronunciation(member?.displayName, guildId);
+    text = `${correctedName}が侵入しましたわね。`;
+  } else if (oldState.channel && !newState.channel && oldState.channelId === currentVC.id) {
+    const member = oldState.member || oldState.guild.members.cache.get(oldState.id);
+    const correctedName = correctNamePronunciation(member?.displayName, guildId);
+    text = `${correctedName}がくたばりました。`;
+  }
+
   if (text) {
     const uniqueId = uuidv4();
     const filePath = path.join(__dirname, `vc_notice_${uniqueId}.mp3`);
-    if (!audioQueue[guildId]) audioQueue[guildId] = [];
-    audioQueue[guildId].push({ text, file: filePath });
+    if (!audioQueue.has(guildId)) audioQueue.set(guildId, []);
+    audioQueue.get(guildId).push({ text, file: filePath });
     playNextInQueue(guildId);
   }
 
+  // BotがVC内にいて誰も居なくなったら切断する処理
+  if (currentVC) {
+    const nonBotMembers = currentVC.members.filter(member => !member.user.bot);
+    if (nonBotMembers.size === 0) {
+      if (voiceConnections.has(guildId) && voiceConnections.get(guildId).state.status !== 'destroyed' && activeChannels.has(guildId)) {
+        if (vcTimeRecording[guildId] && vcJoinTimes[guildId]) {
+          const joinTime = vcJoinTimes[guildId];
+          const durationMs = Date.now() - joinTime;
+          const seconds = Math.floor(durationMs / 1000) % 60;
+          const minutes = Math.floor(durationMs / (1000 * 60)) % 60;
+          const hours = Math.floor(durationMs / (1000 * 60 * 60));
+          const durationString =
+            (hours > 0 ? `${hours}時間` : '') +
+            (minutes > 0 ? `${minutes}分` : '') +
+            `${seconds}秒`;
 
-  
-//ここから↓7/3
-if (currentVC) {
-  const nonBotMembers = currentVC.members.filter(member => !member.user.bot);
-  if (nonBotMembers.size === 0) {
-    if (voiceConnections[guildId] && voiceConnections[guildId].state.status !== 'destroyed' && activeChannels[guildId] !== null) {
-      if (vcTimeRecording[guildId] && vcJoinTimes[guildId]) {
-        const joinTime = vcJoinTimes[guildId];
-        const durationMs = Date.now() - joinTime;
-        const seconds = Math.floor(durationMs / 1000) % 60;
-        const minutes = Math.floor(durationMs / (1000 * 60)) % 60;
-        const hours = Math.floor(durationMs / (1000 * 60 * 60));
-        const durationString =
-          (hours > 0 ? `${hours}時間` : '') +
-          (minutes > 0 ? `${minutes}分` : '') +
-          `${seconds}秒`;
+          const textChannel = client.channels.cache.get(activeChannels.get(guildId));
+          if (textChannel && textChannel.isTextBased()) {
+            textChannel.send(`BOTは${durationString}ほどVCにいましたわ。お疲れ様ですわ。`);
+          }
 
-        const textChannel = client.channels.cache.get(activeChannels[guildId]);
-        if (textChannel && textChannel.isTextBased()) {
-          textChannel.send(`BOTは${durationString}ほどVCにいましたわ。お疲れ様ですわ。`);
+          vcJoinTimes[guildId] = null; // リセット
         }
-
-        vcJoinTimes[guildId] = null; // リセット
+        try {
+          voiceConnections.get(guildId).destroy();
+        } catch (e) {
+          console.error('destroy エラー:', e);
+        }
+        voiceConnections.delete(guildId);
+        const textChannel = client.channels.cache.get(activeChannels.get(guildId));
+        if (textChannel && textChannel.isTextBased()) {
+          textChannel.send('誰もVCにいなくなったので消滅します');
+        }
+        activeChannels.delete(guildId);
       }
-      voiceConnections[guildId].destroy();
-      voiceConnections[guildId] = null;
-      const textChannel = client.channels.cache.get(activeChannels[guildId]);
-      if (textChannel && textChannel.isTextBased()) {
-        textChannel.send('誰もVCにいなくなったので消滅します');
-      }
-      activeChannels[guildId] = null;
     }
   }
-}
-//ここまで↑
 });
 
 // Express
-
-
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -1181,60 +1069,55 @@ app.listen(port, () => {
   console.log(`✔ Express listening on port ${port}`);
   if (!process.env.BOT_TOKEN) {
     console.error("BOT_TOKEN が .env に設定されていません");
-    
   }
 
-  //10.31
+  // process.on('exit') での後片付け（念のため Map を使って停止）
   process.on('exit', () => {
-  for (const player of audioPlayers.values()) {
-    try { player.stop(); } catch {}
-  }
-  for (const conn of voiceConnections.values()) {
-    try { conn.destroy(); } catch {}
-  }
-});
-  
-//09.24
-client.on("guildCreate", async guild => {
-  console.log(`新しいサーバーに参加しました: ${guild.name} (${guild.id})`);
+    for (const player of audioPlayers.values()) {
+      try { player.stop(); } catch {}
+    }
+    for (const conn of voiceConnections.values()) {
+      try { conn.destroy(); } catch {}
+    }
+  });
 
-  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-  const CLIENT_ID = client.application.id;
+  client.on("guildCreate", async guild => {
+    console.log(`新しいサーバーに参加しました: ${guild.name} (${guild.id})`);
 
-  try {
-    await rest.put(
-      Routes.applicationGuildCommands(CLIENT_ID, guild.id),
-      { body: ikCommands }
-    );
-    console.log(`サーバー「${guild.name}」にコマンドを自動登録しました`);
-  } catch (err) {
-    console.error("スラッシュコマンド自動登録エラー:", err);
-  }
-});
+    const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+    const CLIENT_ID = client.application.id;
 
+    try {
+      await rest.put(
+        Routes.applicationGuildCommands(CLIENT_ID, guild.id),
+        { body: ikCommands }
+      );
+      console.log(`サーバー「${guild.name}」にコマンドを自動登録しました`);
+    } catch (err) {
+      console.error("スラッシュコマンド自動登録エラー:", err);
+    }
+  });
 
-  
   client.login(process.env.BOT_TOKEN).then(() => {
     console.log(" Discord bot ログイン成功");
   }).catch(err => {
     console.error("Discord bot ログイン失敗:", err);
     console.warn(`自動再起動を実行します`);
-   //process.exit(1);
+    // process.exit(1);
   });
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
   console.warn(`自動再起動を実行します`);
- //process.exit(1); 
+  //process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
   console.warn(`自動再起動を実行します`);
- //process.exit(1);
+  //process.exit(1);
 });
-
 
 client.on('error', err => {
   console.error('[Client Error]', err);
@@ -1248,13 +1131,8 @@ client.on('shardError', err => {
   //process.exit(1);
 });
 
-
 client.on('disconnect', event => {
   console.error('[Disconnected]', event);
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
-
-
-
-
