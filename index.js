@@ -434,20 +434,28 @@ async function leaveVC(guildId, reasonText = '切断されましたわ。') {
     }
   }
 
-  // 残りの未処理ファイル削除
-  if (audioQueue.has(guildId)) {
-    for (const item of audioQueue.get(guildId)) {
-      fs.unlink(item.file, err => {
-        if (err) {
-          console.warn(`未処理ファイル削除失敗: ${item.file} (${err.message})`);
-          console.warn(`自動再起動を実行します`);
-          // process.exit は呼ばない
-        }
-      });
-    }
-    audioQueue.set(guildId, []);
+ // 残りの未処理ファイル削除
+if (audioQueue.has(guildId)) {
+  for (const item of audioQueue.get(guildId)) {
+    fs.unlink(item.file, err => {
+      if (!err) return;
+
+      // ENOENT は正常（すでに削除されている）
+      if (err.code === 'ENOENT') {
+        console.debug(`既に削除済み: ${item.file}`);
+        return;
+      }
+
+      // 本当に異常なときにログ
+      console.error(`ファイル削除失敗: ${item.file}`, err);
+    });
   }
-  isPlaying[guildId] = false;
+
+  audioQueue.set(guildId, []);
+}
+
+isPlaying[guildId] = false;
+
 
   // VC切断
   if (voiceConnections.has(guildId) && voiceConnections.get(guildId).state.status !== 'destroyed') {
