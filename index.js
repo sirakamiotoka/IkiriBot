@@ -298,6 +298,23 @@ function convertToPCMStream(mp3Path) {
   return ffmpegProc.stdout;
 }
 
+//2026.0313
+async function forceLeaveAllVC(reason = '') {
+  try {
+    const guildIds = Array.from(voiceConnections.keys());
+
+    for (const guildId of guildIds) {
+      try {
+        await leaveVC(guildId, reason);
+      } catch (err) {
+        console.error(`forceLeaveAllVC error (${guildId}):`, err);
+      }
+    }
+  } catch (err) {
+    console.error('forceLeaveAllVC fatal:', err);
+  }
+}
+
 async function convertToPCM(mp3Path, pcmPath) {
   return new Promise((resolve, reject) => {
     ffmpeg(mp3Path)
@@ -804,6 +821,7 @@ client.on(Events.MessageCreate, async message => {
     message.reply('何わらってやがりますの？くたばってくださいませｗ');
     return;
   }
+  
 
   // コマンド登録（/ik.commandset など）の部分は元のまま
   if (content === '/ik.commandset') {
@@ -1113,10 +1131,12 @@ app.listen(port, () => {
     }
   });
 
+  
   client.login(process.env.BOT_TOKEN).then(() => {
     console.log(" Discord bot ログイン成功");
   }).catch(err => {
     console.error("Discord bot ログイン失敗:", err);
+    await forceLeaveAllVC('異常のため一度撤退します');
     console.warn(`自動再起動を実行します`);
     // process.exit(1);
   });
@@ -1124,30 +1144,35 @@ app.listen(port, () => {
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
+  await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+    await forceLeaveAllVC('異常のため一度撤退します');;
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
 client.on('error', err => {
   console.error('[Client Error]', err);
+  await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
 client.on('shardError', err => {
   console.error('[Shard Error]', err);
+   await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
 client.on('disconnect', event => {
   console.error('[Disconnected]', event);
+  await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
