@@ -207,7 +207,7 @@ async function sanitizeText(text, guild) {
   text = text
     .replace(/<a?:\w+:\d+>/g, '')                               // カスタム絵文字削除
     .replace(/白神/g, 'しらかみ')                               // 白神 → しらかみ
-    .replace(/イキリ激きも音読星人/g, 'いきりげききもおんどくせいじん') // 固有名詞読み替え
+    .replace(/音読星人/g, 'おんどくせいじん') // 固有名詞読み替え
     .replace(/https?:\/\/\S+|www\.\S+/g, 'ゆーあーるえる')       // URL
     .replace(/[^\p{L}\p{N}\p{Zs}。、！？\n.]/gu, '');            // 記号類除去
 
