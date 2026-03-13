@@ -1142,35 +1142,35 @@ app.listen(port, () => {
   });
 });
 
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException',async (err) => {
   console.error('Uncaught Exception:', err);
   await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
-    await forceLeaveAllVC('異常のため一度撤退します');;
+process.on('unhandledRejection', async (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
-client.on('error', err => {
+client.on('error', async (err) => {
   console.error('[Client Error]', err);
   await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
-client.on('shardError', err => {
+client.on('shardError', async (err) => {
   console.error('[Shard Error]', err);
-   await forceLeaveAllVC('異常のため一度撤退します');
+  await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
 
-client.on('disconnect', event => {
+client.on('disconnect', async (event) => {
   console.error('[Disconnected]', event);
   await forceLeaveAllVC('異常のため一度撤退します');
   console.warn(`自動再起動を実行します`);
