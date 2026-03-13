@@ -739,8 +739,10 @@ client.on(Events.MessageCreate, async message => {
   const content = message.content;
   const guildId = message.guild.id;
 
-  if (!speakUserName[guildId]) speakUserName[guildId] = false; // 07.24
-
+  //if (!speakUserName[guildId]) speakUserName[guildId] = false; // 07.24
+if (speakUserName[guildId] === undefined) {
+  speakUserName[guildId] = true;
+} // 20260313
   if (!nameMappings[guildId]) {
     nameMappings[guildId] = {};
     nameMappings[guildId]['白神'] = 'しらかみ';
