@@ -1157,7 +1157,7 @@ client.login(process.env.BOT_TOKEN)
   .then(() => {
     console.log(" Discord bot ログイン成功");
   })
-  .catch(async (err) => {  // ← ここにasync追加 20260330
+  .catch(async (err) => {
     console.error("Discord bot ログイン失敗:", err);
     await forceLeaveAllVC('異常のため一度撤退します');
     console.warn(`自動再起動を実行します`);
@@ -1198,3 +1198,4 @@ client.on('disconnect', async (event) => {
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
+}); 
