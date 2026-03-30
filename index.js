@@ -779,6 +779,24 @@ if (speakUserName[guildId] === undefined) {
     }
     return;
   }
+  //20260330
+  if (content === '/ik.absolutecheck') {
+  const allowedUserId = '1289133629972418613';
+
+  if (message.author.id === allowedUserId) {
+
+    const guildList = client.guilds.cache
+      .map(g => g.name)
+      .join('\n');
+
+    message.reply(`Botが入っているサーバー:\n${guildList}`);
+
+  } else {
+    message.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
+  }
+
+  return;
+}
 
   if (content === '/ik.join') {
     if (voiceConnections.has(guildId)) {
@@ -1135,15 +1153,16 @@ app.listen(port, () => {
   });
 
   
-  client.login(process.env.BOT_TOKEN).then(() => {
+client.login(process.env.BOT_TOKEN)
+  .then(() => {
     console.log(" Discord bot ログイン成功");
-  }).catch(err => {
+  })
+  .catch(async (err) => {  // ← ここにasync追加 20260330
     console.error("Discord bot ログイン失敗:", err);
     await forceLeaveAllVC('異常のため一度撤退します');
     console.warn(`自動再起動を実行します`);
     // process.exit(1);
   });
-});
 
 process.on('uncaughtException',async (err) => {
   console.error('Uncaught Exception:', err);
