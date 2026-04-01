@@ -1153,7 +1153,7 @@ app.listen(port, () => {
     }
   });
 
-  
+  });//20260401
 client.login(process.env.BOT_TOKEN)
   .then(() => {
     console.log(" Discord bot ログイン成功");
@@ -1199,4 +1199,4 @@ client.on('disconnect', async (event) => {
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
-}); 
+ 
