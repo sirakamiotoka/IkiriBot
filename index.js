@@ -7,6 +7,7 @@ const audioQueue = new Map();       // guildId -> [{text, file}, ...]
 process.on('SIGINT', async () => {
   console.log('[SIGINT] 終了処理を開始します...');
 
+  
   try {
     // --- AudioPlayer の停止 ---
     if (audioPlayers instanceof Map) {
