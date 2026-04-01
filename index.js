@@ -1208,9 +1208,10 @@ client.on('shardError', async (err) => {
   console.warn(`自動再起動を実行します`);
   //process.exit(1);
 });
-
+/*
 client.on('shardDisconnect', async (event) => {
   console.warn('[ShardDisconnect]', event);
 });
+*/
 });
  
