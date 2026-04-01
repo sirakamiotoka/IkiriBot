@@ -1153,7 +1153,6 @@ app.listen(port, () => {
     }
   });
 
-  });//20260401
 client.login(process.env.BOT_TOKEN)
   .then(() => {
     console.log(" Discord bot ログイン成功");
@@ -1193,10 +1192,8 @@ client.on('shardError', async (err) => {
   //process.exit(1);
 });
 
-client.on('disconnect', async (event) => {
-  console.error('[Disconnected]', event);
-  await forceLeaveAllVC('異常のため一度撤退します');
-  console.warn(`自動再起動を実行します`);
-  //process.exit(1);
+client.on('shardDisconnect', async (event) => {
+  console.warn('[ShardDisconnect]', event);
+});
 });
  
