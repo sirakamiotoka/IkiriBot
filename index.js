@@ -167,6 +167,10 @@ const ikCommands = [
   new SlashCommandBuilder()
     .setName('ik-wordlist')
     .setDescription('登録されている誤読修正一覧を表示します'),
+
+  new SlashCommandBuilder()
+    .setName('ik-reset')
+    .setDescription('再起動を行います')
 ].map(cmd => cmd.toJSON());
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
@@ -707,6 +711,19 @@ client.on(Events.InteractionCreate, async interaction => {
       }
       break;
 
+    if (interaction.commandName === 'ik-reset') {
+  await interaction.reply({
+    content: '再起動してあげますわw',
+    ephemeral: true
+  });
+
+  console.log('手動再起動コマンド実行');
+
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+}
+      
     case 'ik-wordlist':
       await interaction.deferReply();
       {
