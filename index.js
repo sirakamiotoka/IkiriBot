@@ -711,10 +711,18 @@ client.on(Events.InteractionCreate, async interaction => {
       }
       break;
 
-    if (interaction.commandName === 'ik-reset') {
+    case 'ik-reset':
   await interaction.reply({
     content: '再起動してあげますわw',
     ephemeral: true
+  });
+
+  console.log('手動再起動コマンド実行');
+
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
+  break;
   });
 
   console.log('手動再起動コマンド実行');
