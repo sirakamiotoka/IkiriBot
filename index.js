@@ -724,12 +724,6 @@ client.on(Events.InteractionCreate, async interaction => {
   }, 1000);
   break;
   });
-
-  console.log('手動再起動コマンド実行');
-
-  setTimeout(() => {
-    process.exit(0);
-  }, 1000);
 }
       
     case 'ik-wordlist':
