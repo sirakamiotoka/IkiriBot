@@ -723,8 +723,6 @@ client.on(Events.InteractionCreate, async interaction => {
     process.exit(0);
   }, 1000);
   break;
-  });
-}
       
     case 'ik-wordlist':
       await interaction.deferReply();
