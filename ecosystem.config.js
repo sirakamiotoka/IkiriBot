@@ -5,9 +5,11 @@ module.exports = {
       script: "index.js",   
       autorestart: true,
       watch: false,
-      max_restarts: Infinity,
+      
       restart_delay: 1500,
      //2026-05-15 stop_exit_codes: [0, 2],
+      max_restarts: 500,
+      min_uptime: 600000,
       env: {
         NODE_ENV: "production"
       }
