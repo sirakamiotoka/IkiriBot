@@ -712,29 +712,27 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
 case 'ik-reset': {
- 
-await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: true });
 
-  console.log(`[IK-RESET] サーバー単位リセット開始: ${guild.name} (${guildId})`);
+  console.log(`[IK-RESET] 開始: ${guild.name} (${guildId})`);
 
   try {
-    // 1. このサーバーの再生を停止
+    // まず再生を強制停止
     const player = audioPlayers.get(guildId);
 
     if (player) {
       try {
-        player.stop(true);
         player.removeAllListeners();
+        player.stop(true);
       } catch (err) {
         console.error(`[IK-RESET] Player停止エラー (${guildId}):`, err);
       }
-
-      audioPlayers.delete(guildId);
     }
 
+    audioPlayers.delete(guildId);
 
-    // 2. このサーバーの再生キューを削除
-    //    ＋残っているMP3ファイルも削除
+
+    // キュー内の音声ファイルを削除
     const queue = audioQueue.get(guildId);
 
     if (queue) {
@@ -742,7 +740,7 @@ await interaction.deferReply({ ephemeral: true });
         if (item?.file) {
           fs.unlink(item.file, err => {
             if (err && err.code !== 'ENOENT') {
-              console.error(`[IK-RESET] 音声ファイル削除失敗: ${item.file}`, err);
+              console.error(`[IK-RESET] ファイル削除失敗:`, err);
             }
           });
         }
@@ -752,7 +750,7 @@ await interaction.deferReply({ ephemeral: true });
     audioQueue.delete(guildId);
 
 
-    // 3. このサーバーのVC接続を完全に破棄
+    // VC接続を強制破棄
     const connection = voiceConnections.get(guildId);
 
     if (connection) {
@@ -761,11 +759,12 @@ await interaction.deferReply({ ephemeral: true });
       } catch (err) {
         console.error(`[IK-RESET] VC破棄エラー (${guildId}):`, err);
       }
-
-      voiceConnections.delete(guildId);
     }
 
-    // 4. このサーバーだけの一時状態をリセット
+    voiceConnections.delete(guildId);
+
+
+    // このサーバーだけの一時状態を削除
     activeChannels.delete(guildId);
 
     delete isPlaying[guildId];
@@ -774,24 +773,28 @@ await interaction.deferReply({ ephemeral: true });
     delete queueLocks[guildId];
 
 
-    // 5. 永続設定は消さない
+    // 永続設定は残す
     // nameMappings[guildId]
     // speakUserName[guildId]
-    // vcTimeRecording[guildId]を保持
+    // vcTimeRecording[guildId]
 
 
     console.log(`[IK-RESET] 完了: ${guild.name} (${guildId})`);
 
     await interaction.editReply(
-      'このサーバーのBOT状態を完全にリセットしましたわｗ'
+      'このサーバーのBOT状態をリセットしましたわｗ' 
     );
 
   } catch (err) {
-    console.error(`[IK-RESET] 致命的エラー (${guildId}):`, err);
+    console.error(`[IK-RESET] エラー (${guildId}):`, err);
 
-    await interaction.editReply(
-      ' このサーバーのリセット中にエラーが発生しましたわ。'
-    );
+    try {
+      await interaction.editReply(
+        'リセット中にエラーが発生しましたわ。ログを確認してくださいまし。'
+      );
+    } catch (replyErr) {
+      console.error(`[IK-RESET] Discord返信エラー:`, replyErr);
+    }
   }
 
   break;
