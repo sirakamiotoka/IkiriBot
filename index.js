@@ -508,7 +508,13 @@ client.once(Events.ClientReady, c => {
 
 // Interaction / Slash handling
 client.on(Events.InteractionCreate, async interaction => {
+  console.log(
+    `[INTERACTION] ${interaction.type} / ${interaction.commandName ?? 'unknown'}`
+  );
+
   if (!interaction.isChatInputCommand()) return;
+
+  try {
   const { commandName, guildId, guild, member } = interaction;
 
   if (!guildId || !guild || !member) {
@@ -522,7 +528,9 @@ client.on(Events.InteractionCreate, async interaction => {
   const botVC = guild.members.me?.voice?.channelId;
 
     try {
+      console.log(`[ik-join] 受信 guild=${guildId}`);
     await interaction.deferReply();
+      console.log(`[ik-join] deferReply完了 guild=${guildId}`);
   } catch (err) {
     console.error(
       `[Interaction] deferReply失敗 command=${commandName} guild=${guildId}`,
@@ -587,7 +595,9 @@ client.on(Events.InteractionCreate, async interaction => {
         }
 
         activeChannels.set(guildId, interaction.channelId);
+        console.log(`[ik-join] editReply開始 guild=${guildId}`);
         await interaction.editReply('入ってあげましたわ。');
+        console.log(`[ik-join] editReply完了 guild=${guildId}`);
       } catch (err) {
         console.error('VC参加失敗:', err);
         await interaction.editReply('VCへの参加に失敗しましたわ。');
