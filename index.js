@@ -623,22 +623,22 @@ client.on(Events.InteractionCreate, async interaction => {
 }
 
     case 'ik-kill':
-      await interaction.deferReply();
+      //await interaction.deferReply();
 
       if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state?.status !== 'destroyed' && activeChannels.has(guildId)) {
         if (botVC && userVC?.id === botVC) {
-          await interaction.editReply('は？何してくれやがりますの？');
+          await interaction.reply('は？何してくれやがりますの？');
           leaveVC(guildId, '');
         } else {
-          await interaction.editReply('同じVCにいない君には命令権限はありませんわｗｗ');
+          await interaction.reply('同じVCにいない君には命令権限はありませんわｗｗ');
         }
       } else {
-        await interaction.editReply('どこにも繋いでないですわねwざんねん！w');
+        await interaction.reply('どこにも繋いでないですわねwざんねん！w');
       }
       break;
 
     case 'ik-vctimerecording':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       const timermode = interaction.options.getString('mode');
 
       if (vcTimeRecording[guildId] === undefined) {
@@ -648,7 +648,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
       if (timermode === 'on') {
         if (vcTimeRecording[guildId] === true) {
-          await interaction.editReply('既にonですわよ？ｗ');
+          await interaction.reply('既にonですわよ？ｗ');
         } else {
           vcTimeRecording[guildId] = true;
           saveSettings();
@@ -657,44 +657,44 @@ client.on(Events.InteractionCreate, async interaction => {
           if (botVCid) {
             vcJoinTimes[guildId] = new Date();
           }
-          await interaction.editReply('VC滞在時間の記録を開始しましたわ。');
+          await interaction.reply('VC滞在時間の記録を開始しましたわ。');
         }
       } else if (timermode === 'off') {
         vcTimeRecording[guildId] = false;
         vcJoinTimes[guildId] = null;
         saveSettings();
-        await interaction.editReply('VC滞在時間の記録を停止しましたわ。');
+        await interaction.reply('VC滞在時間の記録を停止しましたわ。');
       } else {
-        await interaction.editReply('modeは `on` または `off` を指定してくださいませ。');
+        await interaction.reply('modeは `on` または `off` を指定してくださいませ。');
       }
       break;
 
     case 'ik-absolutekill':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       if (userId !== '1289133629972418613') {
-        await interaction.editReply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
+        await interaction.reply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
         return;
       }
 
       if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state?.status !== 'destroyed' && activeChannels.has(guildId)) {
-        await interaction.editReply('は？強制切断されましたわ。');
+        await interaction.reply('は？強制切断されましたわ。');
         leaveVC(guildId, '');
       } else {
-        await interaction.editReply('今はどこにも繋がっていませんわ。');
+        await interaction.reply('今はどこにも繋がっていませんわ。');
       }
       break;
 
     case 'ik-stcheck':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state) {
-        await interaction.editReply(`voiceConnections: ${voiceConnections.get(guildId).state.status}\nactiveChannel: ${activeChannels.get(guildId)}`);
+        await interaction.reply(`voiceConnections: ${voiceConnections.get(guildId).state.status}\nactiveChannel: ${activeChannels.get(guildId)}`);
       } else {
-        await interaction.editReply('状態確認を拒否しますわ');
+        await interaction.reply('状態確認を拒否しますわ');
       }
       break;
 
     case 'ik-namespeak':
-      await interaction.deferReply();
+      //await interaction.deferReply();
 
       if (speakUserName[guildId] === undefined) {
         speakUserName[guildId] = true;
@@ -704,7 +704,7 @@ client.on(Events.InteractionCreate, async interaction => {
         const mode = interaction.options.getString('mode');
         const current = speakUserName[guildId];
         if ((mode === 'on' && current === true) || (mode === 'off' && current === false)) {
-          await interaction.editReply(
+          await interaction.reply(
             mode === 'on'
               ? 'すでにonになってますわよ？ｗ'
               : 'すでにoffになってますわよ？ｗ'
@@ -712,7 +712,7 @@ client.on(Events.InteractionCreate, async interaction => {
         } else {
           speakUserName[guildId] = (mode === 'on');
           saveSettings();
-          await interaction.editReply(
+          await interaction.reply(
             mode === 'on'
               ? '名前も呼んであげますわ。光栄に思いなさいｗ'
               : 'もう名前は呼んであげませんわｗ'
@@ -722,30 +722,30 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-addword':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       {
         const NGyomi = interaction.options.getString('間違ってる読み');
         const OKyomi = interaction.options.getString('正しい読み');
         if (!nameMappings[guildId]) nameMappings[guildId] = {};
         if (nameMappings[guildId][NGyomi]) {
-          await interaction.editReply(`${NGyomi} はすでに登録されてますわボケ。`);
+          await interaction.reply(`${NGyomi} はすでに登録されてますわボケ。`);
         } else {
           nameMappings[guildId][NGyomi] = OKyomi;
           saveSettings();
-          await interaction.editReply(`新しいの登録してやりました、感謝してくださいまし: ${NGyomi} → ${OKyomi}`);
+          await interaction.reply(`新しいの登録してやりました、感謝してくださいまし: ${NGyomi} → ${OKyomi}`);
         }
       }
       break;
 
     case 'ik-removeword':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       {
         const toRemove = interaction.options.getString('読み');
         if (nameMappings[guildId]?.[toRemove]) {
           delete nameMappings[guildId][toRemove];
-          await interaction.editReply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
+          await interaction.reply(`${toRemove} を木端微塵にしてやりましたわｗ感謝しなさいｗｗ`);
         } else {
-          await interaction.editReply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
+          await interaction.reply(`${toRemove} が登録されてないですわね。いい加減にしてくださいませ`);
         }
       }
       break;
@@ -820,7 +820,7 @@ case 'ik-reset': {
 
     console.log(`[IK-RESET] 完了: ${guild.name} (${guildId})`);
 
-    await interaction.editReply(
+    await interaction.reply(
       'このサーバーのBOT状態をリセットしましたわｗ' 
     );
 
@@ -828,7 +828,7 @@ case 'ik-reset': {
     console.error(`[IK-RESET] エラー (${guildId}):`, err);
 
     try {
-      await interaction.editReply(
+      await interaction.reply(
         'リセット中にエラーが発生しましたわ。ログを確認してくださいまし。'
       );
     } catch (replyErr) {
@@ -841,28 +841,28 @@ case 'ik-reset': {
 
       
     case 'ik-wordlist':
-      await interaction.deferReply();
+      //await interaction.deferReply();
       {
         const mappings = nameMappings[guildId];
         if (!mappings || Object.keys(mappings).length === 0) {
-          await interaction.editReply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
+          await interaction.reply('誤読リストに登録されてる単語がないですわね。ふざけんな。');
         } else {
           const list = Object.entries(mappings)
             .map(([k, v]) => `${k} → ${v}`)
             .join('\n');
-          await interaction.editReply(`単語リスト:\n${list}`);
+          await interaction.reply(`単語リスト:\n${list}`);
         }
       }
       break;
 
     case 'ik-help':
-      await interaction.deferReply();
-      await interaction.editReply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
+      //await interaction.deferReply();
+      await interaction.reply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
       break;
 
     default:
-      await interaction.deferReply();
-      await interaction.editReply('そのコマンドには対応しておりませんわ。');
+      //await interaction.deferReply();
+      await interaction.reply('そのコマンドには対応しておりませんわ。');
       break;
     }
 
@@ -871,7 +871,7 @@ case 'ik-reset': {
 
     try {
       if (interaction.deferred || interaction.replied) {
-        await interaction.editReply(
+        await interaction.reply(
           'コマンド処理中にエラーが発生しましたわ。'
         );
       } else {
