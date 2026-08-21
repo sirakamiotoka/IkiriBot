@@ -712,15 +712,8 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
 case 'ik-reset': {
-  if (interaction.user.id !== '1289133629972418613') {
-    await interaction.reply({
-      content: 'このコマンドは一般階級ユーザーには使えませんわｗｗ',
-      ephemeral: true
-    });
-    return;
-  }
-
-  await interaction.deferReply({ ephemeral: true });
+ 
+await interaction.deferReply({ ephemeral: true });
 
   console.log(`[IK-RESET] サーバー単位リセット開始: ${guild.name} (${guildId})`);
 
