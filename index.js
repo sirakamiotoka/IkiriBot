@@ -800,17 +800,6 @@ case 'ik-reset': {
   break;
 }
 
-  await interaction.reply({
-    content: '再起動してあげますわw',
-    ephemeral: true
-  });
-
-  console.log('手動再起動コマンド実行');
-
-  setTimeout(() => {
-    process.exit(0);
-  }, 1000);
-  break;
       
     case 'ik-wordlist':
       await interaction.deferReply();
