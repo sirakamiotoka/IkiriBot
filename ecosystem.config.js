@@ -7,6 +7,7 @@ module.exports = {
       watch: false,
       
       restart_delay: 1500,
+      exp_backoff_restart_delay: 500
      //2026-05-15 stop_exit_codes: [0, 2],
       max_restarts: 200,
       env: {
