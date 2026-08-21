@@ -541,67 +541,96 @@ client.on(Events.InteractionCreate, async interaction => {
 
   
   switch (commandName) {
-    case 'ik-join':
-      //await interaction.deferReply();
+    case 'ik-join': {
+  console.log(`[ik-join] 受信 guild=${guildId}`);
 
-      if (voiceConnections.has(guildId)) {
-        await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
-        return;
-      }
-
-      if (!userVC) {
-        await interaction.editReply('先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？');
-        return;
-      }
-
-      try {
-        const conn = joinVoiceChannel({
-          channelId: userVC.id,
-          guildId: guild.id,
-          adapterCreator: guild.voiceAdapterCreator,
-        });
-        // Map に格納
-        voiceConnections.set(guildId, conn);
-
-        // stateChange の監視（元のロジックを維持）
-        try {
-          conn.on('stateChange', (oldState, newState) => {
-            if (newState.status === 'disconnected' || newState.status === 'destroyed') {
-              try {
-                setTimeout(() => {
-                  const userVC2 = guild.members.me?.voice?.channel;
-                  if (userVC2) {
-                    // 再接続処理：新しい接続を作り Map に保存
-                    const newConn = joinVoiceChannel({
-                      channelId: userVC2.id,
-                      guildId: guild.id,
-                      adapterCreator: guild.voiceAdapterCreator,
-                    });
-                    voiceConnections.set(guildId, newConn);
-                    // console.log(`[Rejoin] 再接続成功`);
-                  } else {
-                    // console.log(`[Rejoin] ユーザーVCが見つからず再接続スキップ`);
-                  }
-                }, 3000);
-              } catch (err) {
-                console.error(`[Rejoin Error] ${err.message}`);
-                setTimeout(() => leaveVC(guildId, ''), 2000);
-              }
-            }
-          });
-        } catch (e) {
-          // on が使えない場合もあるが無視
-        }
-
-        activeChannels.set(guildId, interaction.channelId);
-        console.log(`[ik-join] editReply開始 guild=${guildId}`);
-        await interaction.editReply('入ってあげましたわ。');
-        console.log(`[ik-join] editReply完了 guild=${guildId}`);
-      } catch (err) {
-        console.error('VC参加失敗:', err);
-        await interaction.editReply('VCへの参加に失敗しましたわ。');
-      }
+  try {
+    if (voiceConnections.has(guildId)) {
+      await interaction.reply(
+        'もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ'
+      );
       break;
+    }
+
+    if (!userVC) {
+      await interaction.reply(
+        '先にお前がVC入ってから言いませんこと？もしかしてアホの御方でございますか？'
+      );
+      break;
+    }
+
+    console.log(`[ik-join] VC接続開始 guild=${guildId}`);
+
+    const conn = joinVoiceChannel({
+      channelId: userVC.id,
+      guildId: guild.id,
+      adapterCreator: guild.voiceAdapterCreator,
+    });
+
+    voiceConnections.set(guildId, conn);
+
+    console.log(`[ik-join] VC接続完了 guild=${guildId}`);
+
+    try {
+      conn.on('stateChange', (oldState, newState) => {
+        if (
+          newState.status === 'disconnected' ||
+          newState.status === 'destroyed'
+        ) {
+          console.log(
+            `[VC] 接続状態変更: ${oldState.status} -> ${newState.status} (${guildId})`
+          );
+
+          setTimeout(() => {
+            try {
+              const userVC2 = guild.members.me?.voice?.channel;
+
+              if (userVC2) {
+                const newConn = joinVoiceChannel({
+                  channelId: userVC2.id,
+                  guildId: guild.id,
+                  adapterCreator: guild.voiceAdapterCreator,
+                });
+
+                voiceConnections.set(guildId, newConn);
+
+                console.log(`[VC] 再接続しました (${guildId})`);
+              }
+            } catch (err) {
+              console.error(`[VC] 再接続失敗 (${guildId})`, err);
+              leaveVC(guildId, '');
+            }
+          }, 3000);
+        }
+      });
+    } catch (e) {
+      console.error(`[VC] stateChange設定失敗 (${guildId})`, e);
+    }
+
+    activeChannels.set(guildId, interaction.channelId);
+
+    console.log(`[ik-join] reply開始 guild=${guildId}`);
+
+    await interaction.reply('入ってあげましたわ。');
+
+    console.log(`[ik-join] reply完了 guild=${guildId}`);
+
+  } catch (err) {
+    console.error(`[ik-join] エラー guild=${guildId}`, err);
+
+    try {
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply(
+          'VCへの参加に失敗しましたわ。'
+        );
+      }
+    } catch (replyErr) {
+      console.error(`[ik-join] 返信エラー guild=${guildId}`, replyErr);
+    }
+  }
+
+  break;
+}
 
     case 'ik-kill':
       //await interaction.deferReply();
