@@ -509,7 +509,7 @@ client.once(Events.ClientReady, c => {
 // Interaction / Slash handling
 client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isChatInputCommand()) return;
-
+ try {
   const { commandName, guildId, guild, member } = interaction;
 
   if (!guildId || !guild || !member) {
@@ -836,6 +836,25 @@ case 'ik-reset': {
       await interaction.deferReply();
       await interaction.editReply('そのコマンドには対応しておりませんわ。');
       break;
+    }
+
+  } catch (err) {
+    console.error('[Interaction Error]', err);
+
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(
+          'コマンド処理中にエラーが発生しましたわ。'
+        );
+      } else {
+        await interaction.reply({
+          content: 'コマンド処理中にエラーが発生しましたわ。',
+          ephemeral: true
+        });
+      }
+    } catch (replyErr) {
+      console.error('[Interaction Reply Error]', replyErr);
+    }
   }
 });
 
