@@ -527,17 +527,7 @@ client.on(Events.InteractionCreate, async interaction => {
   const userVC = member.voice?.channel;
   const botVC = guild.members.me?.voice?.channelId;
 
-    try {
-      console.log(`[ik-join] 受信 guild=${guildId}`);
-    await interaction.deferReply();
-      console.log(`[ik-join] deferReply完了 guild=${guildId}`);
-  } catch (err) {
-    console.error(
-      `[Interaction] deferReply失敗 command=${commandName} guild=${guildId}`,
-      err
-    );
-    return;
-  }
+
 
   
   switch (commandName) {
