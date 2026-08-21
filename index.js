@@ -168,9 +168,9 @@ const ikCommands = [
     .setName('ik-wordlist')
     .setDescription('登録されている誤読修正一覧を表示します'),
 
- /* new SlashCommandBuilder()
+new SlashCommandBuilder()
     .setName('ik-reset')
-    .setDescription('再起動を行います。')*/
+    .setDescription('このサーバーのBOT状態をリセットします'),
 ].map(cmd => cmd.toJSON());
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
@@ -711,14 +711,98 @@ client.on(Events.InteractionCreate, async interaction => {
       }
       break;
 
-      case 'ik-reset':
+case 'ik-reset': {
   if (interaction.user.id !== '1289133629972418613') {
     await interaction.reply({
-      content: 'このコマンドはユーザーには使えませんわｗｗ',
+      content: 'このコマンドは一般階級ユーザーには使えませんわｗｗ',
       ephemeral: true
     });
     return;
   }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  console.log(`[IK-RESET] サーバー単位リセット開始: ${guild.name} (${guildId})`);
+
+  try {
+    // 1. このサーバーの再生を停止
+    const player = audioPlayers.get(guildId);
+
+    if (player) {
+      try {
+        player.stop(true);
+        player.removeAllListeners();
+      } catch (err) {
+        console.error(`[IK-RESET] Player停止エラー (${guildId}):`, err);
+      }
+
+      audioPlayers.delete(guildId);
+    }
+
+
+    // 2. このサーバーの再生キューを削除
+    //    ＋残っているMP3ファイルも削除
+    const queue = audioQueue.get(guildId);
+
+    if (queue) {
+      for (const item of queue) {
+        if (item?.file) {
+          fs.unlink(item.file, err => {
+            if (err && err.code !== 'ENOENT') {
+              console.error(`[IK-RESET] 音声ファイル削除失敗: ${item.file}`, err);
+            }
+          });
+        }
+      }
+    }
+
+    audioQueue.delete(guildId);
+
+
+    // 3. このサーバーのVC接続を完全に破棄
+    const connection = voiceConnections.get(guildId);
+
+    if (connection) {
+      try {
+        connection.destroy();
+      } catch (err) {
+        console.error(`[IK-RESET] VC破棄エラー (${guildId}):`, err);
+      }
+
+      voiceConnections.delete(guildId);
+    }
+
+    // 4. このサーバーだけの一時状態をリセット
+    activeChannels.delete(guildId);
+
+    delete isPlaying[guildId];
+    delete lastSpeakerInfo[guildId];
+    delete vcJoinTimes[guildId];
+    delete queueLocks[guildId];
+
+
+    // 5. 永続設定は消さない
+    // nameMappings[guildId]
+    // speakUserName[guildId]
+    // vcTimeRecording[guildId]を保持
+
+
+    console.log(`[IK-RESET] 完了: ${guild.name} (${guildId})`);
+
+    await interaction.editReply(
+      'このサーバーのBOT状態を完全にリセットしましたわｗ'
+    );
+
+  } catch (err) {
+    console.error(`[IK-RESET] 致命的エラー (${guildId}):`, err);
+
+    await interaction.editReply(
+      ' このサーバーのリセット中にエラーが発生しましたわ。'
+    );
+  }
+
+  break;
+}
 
   await interaction.reply({
     content: '再起動してあげますわw',
