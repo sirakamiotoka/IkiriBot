@@ -524,7 +524,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
   switch (commandName) {
     case 'ik-join':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
 
       if (voiceConnections.has(guildId)) {
         await interaction.editReply('もう入ってますわねｗ目ぇついてらっしゃいますの？ｗｗｗ');
@@ -584,7 +584,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-kill':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
 
       if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state?.status !== 'destroyed' && activeChannels.has(guildId)) {
         if (botVC && userVC?.id === botVC) {
@@ -599,7 +599,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-vctimerecording':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       const timermode = interaction.options.getString('mode');
 
       if (vcTimeRecording[guildId] === undefined) {
@@ -631,7 +631,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-absolutekill':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       if (userId !== '1289133629972418613') {
         await interaction.editReply('このコマンドは一般階級ユーザーには使えませんわｗｗ');
         return;
@@ -646,7 +646,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-stcheck':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       if (voiceConnections.has(guildId) && voiceConnections.get(guildId)?.state) {
         await interaction.editReply(`voiceConnections: ${voiceConnections.get(guildId).state.status}\nactiveChannel: ${activeChannels.get(guildId)}`);
       } else {
@@ -655,7 +655,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-namespeak':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
 
       if (speakUserName[guildId] === undefined) {
         speakUserName[guildId] = true;
@@ -683,7 +683,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-addword':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       {
         const NGyomi = interaction.options.getString('間違ってる読み');
         const OKyomi = interaction.options.getString('正しい読み');
@@ -699,7 +699,7 @@ client.on(Events.InteractionCreate, async interaction => {
       break;
 
     case 'ik-removeword':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       {
         const toRemove = interaction.options.getString('読み');
         if (nameMappings[guildId]?.[toRemove]) {
@@ -802,7 +802,7 @@ case 'ik-reset': {
 
       
     case 'ik-wordlist':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       {
         const mappings = nameMappings[guildId];
         if (!mappings || Object.keys(mappings).length === 0) {
@@ -817,12 +817,12 @@ case 'ik-reset': {
       break;
 
     case 'ik-help':
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       await interaction.editReply('いやですわｗ少しは自分で考えてみたらどうですの？ｗ');
       break;
 
     default:
-      await interaction.deferReply();
+      await interaction.reply('処理しています...');
       await interaction.editReply('そのコマンドには対応しておりませんわ。');
       break;
     }
