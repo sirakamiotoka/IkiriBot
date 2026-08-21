@@ -540,7 +540,6 @@ client.on(Events.InteractionCreate, async interaction => {
   }
 
   
-  try {
   switch (commandName) {
     case 'ik-join':
       //await interaction.deferReply();
